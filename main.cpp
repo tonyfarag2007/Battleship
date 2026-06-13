@@ -29,12 +29,11 @@ int main() {
             startButton.setFillColor(sf::Color::Blue);
             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                 if (!isClicked) {
-                    startButton.setFillColor(sf::Color::White);
+                    std::cout<<"Mouse click!" <<std::endl;
                     isClicked = true;
                 }
             }
             else {
-                startButton.setFillColor(sf::Color::Blue);
                 isClicked = false;
             }
         }
