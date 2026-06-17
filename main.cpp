@@ -1,6 +1,15 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
-
+class Ship {
+public:
+    int length;
+    int row, col;
+    bool isVertical;
+};
+enum screen {
+    WELCOME,
+    GAME
+};
 int main() {
     sf::RenderWindow window(sf::VideoMode({800, 800}), "Battleship");
     sf::RectangleShape rect({800.f, 400.f});
@@ -17,13 +26,30 @@ int main() {
     buttonText.setPosition({365.f, 560.f});
     startButton.setFillColor(sf::Color::White);
     startButton.setPosition({300.f, 530.f});
+    sf::Text playerOneText(font);
+    playerOneText.setString("Player 1");
+    sf::Text placeShipsText(font);
+    placeShipsText.setString("Place Ships");
     bool isOver = false;
     bool isClicked = false;
-    enum screen {
-        WELCOME,
-        GAME
-    };
     screen currentScreen = WELCOME;
+    sf::RectangleShape boardOne[10][10];
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            boardOne[i][j].setSize({60.f, 60.f});
+            boardOne[i][j].setPosition({30.f + j * 60.f, 100.f + i * 60.f});
+            boardOne[i][j].setFillColor(sf::Color::Blue);
+            boardOne[i][j].setOutlineColor(sf::Color::Black);
+            boardOne[i][j].setOutlineThickness(2.f);
+        }
+    }
+    Ship ships[5] = {
+        {5, 0, 0, true},
+        {4, 0, 0, true},
+        {3, 0, 0, true},
+        {2, 0, 0, true},
+        {1, 0, 0, true}
+    };
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
@@ -34,7 +60,7 @@ int main() {
             startButton.setFillColor(sf::Color::Blue);
             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                 if (!isClicked) {
-                    std::cout<<"Mouse click!" <<std::endl;
+                    std::cout <<"Mouse click!" << std::endl;
                     isClicked = true;
                     currentScreen = GAME;
                 }
@@ -54,22 +80,20 @@ int main() {
             window.draw(buttonText);
         }
         else {
+            playerOneText.setPosition({275.f, 0.f});
+            placeShipsText.setPosition({240.f, 750.f});
             sf::RectangleShape board({600.f, 600.f});
-            board.setPosition({100.f, 100.f});
+            sf::RectangleShape shipLoader({100.f, 750.f});
+            shipLoader.setPosition({680.f, 25.f});
+            board.setPosition({30.f, 100.f});
             window.draw(board);
-            sf::RectangleShape grid({60.f, 60.f});
-            grid.setFillColor(sf::Color::Blue);
-            grid.setOutlineColor(sf::Color::Black);
-            grid.setOutlineThickness(2.f);
-            float xPosition = 100.f, yPosition = 40.f;
+            window.draw(playerOneText);
+            window.draw(placeShipsText);
+            window.draw(shipLoader);
             for (int i = 0; i < 10; i++) {
-                yPosition += 60.0;
                 for (int j = 0; j < 10; j++) {
-                    grid.setPosition({xPosition, yPosition});
-                    window.draw(grid);
-                    xPosition += 60.f;
+                    window.draw(boardOne[i][j]);
                 }
-                xPosition = 100.f;
             }
         }
         window.display();
