@@ -11,8 +11,8 @@ enum screen {
     GAME
 };
 int main() {
-    sf::RenderWindow window(sf::VideoMode({800, 800}), "Battleship");
-    sf::RectangleShape rect({800.f, 400.f});
+    sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
+    sf::RectangleShape rect({1920.f, 540.f});
     sf::RectangleShape startButton({200.f, 100.f});
     rect.setFillColor(sf::Color::Red);
     sf::Font font("C:/Windows/Fonts/arial.ttf");
@@ -22,10 +22,10 @@ int main() {
     buttonText.setString("Start");
     welcomeText.setFillColor(sf::Color::Black);
     buttonText.setFillColor(sf::Color::Blue);
-    welcomeText.setPosition({330.f, 230.f});
-    buttonText.setPosition({365.f, 560.f});
+    welcomeText.setPosition({850.f, 230.f});
+    buttonText.setPosition({875.f, 700.f});
     startButton.setFillColor(sf::Color::White);
-    startButton.setPosition({300.f, 530.f});
+    startButton.setPosition({810.f, 670.f});
     sf::Text playerOneText(font);
     playerOneText.setString("Player 1");
     sf::Text placeShipsText(font);
@@ -37,7 +37,7 @@ int main() {
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
             boardOne[i][j].setSize({60.f, 60.f});
-            boardOne[i][j].setPosition({30.f + j * 60.f, 100.f + i * 60.f});
+            boardOne[i][j].setPosition({600.f + j * 60.f, 150.f + i * 60.f});
             boardOne[i][j].setFillColor(sf::Color::Blue);
             boardOne[i][j].setOutlineColor(sf::Color::Black);
             boardOne[i][j].setOutlineThickness(2.f);
@@ -80,13 +80,10 @@ int main() {
             window.draw(buttonText);
         }
         else {
-            playerOneText.setPosition({275.f, 0.f});
-            placeShipsText.setPosition({240.f, 750.f});
-            sf::RectangleShape board({600.f, 600.f});
-            sf::RectangleShape shipLoader({100.f, 750.f});
-            shipLoader.setPosition({680.f, 25.f});
-            board.setPosition({30.f, 100.f});
-            window.draw(board);
+            playerOneText.setPosition({850.f, 30.f});
+            placeShipsText.setPosition({820.f, 800.f});
+            sf::RectangleShape shipLoader({200.f, 560.f});
+            shipLoader.setPosition({1600.f, 160.f});
             window.draw(playerOneText);
             window.draw(placeShipsText);
             window.draw(shipLoader);
@@ -95,6 +92,20 @@ int main() {
                     window.draw(boardOne[i][j]);
                 }
             }
+            sf::RectangleShape shipShape[5];
+            for (int i = 0; i < 5; i++) {
+                shipShape[i].setSize({60.f, ships[i].length * 60.f});
+            }
+            shipShape[0].setPosition({1620.f, 180.f});
+            shipShape[1].setPosition({1720.f, 180.f});
+            shipShape[2].setPosition({1720.f, 440.f});
+            shipShape[3].setPosition({1620.f, 500.f});
+            shipShape[4].setPosition({1620.f, 640.f});
+            for (int i = 0; i < 5; i++) {
+                shipShape[i].setFillColor(sf::Color::Green);
+                window.draw(shipShape[i]);
+            }
+
         }
         window.display();
     }
