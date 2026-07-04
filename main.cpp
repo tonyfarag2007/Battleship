@@ -4,7 +4,8 @@ class Ship {
 public:
     int length;
     int row, col;
-    bool isVertical;
+    bool isVertical, isDragged = false;
+    sf::Vector2f dragOffset;
 };
 enum screen {
     WELCOME,
@@ -32,8 +33,25 @@ int main() {
     placeShipsText.setString("Place Ships");
     bool isOver = false;
     bool isClicked = false;
+    bool isPressed = false;
     screen currentScreen = WELCOME;
     sf::RectangleShape boardOne[10][10];
+    Ship ships[5] = {
+        {5, 0, 0, true},
+        {4, 0, 0, true},
+        {3, 0, 0, true},
+        {2, 0, 0, true},
+        {1, 0, 0, true}
+    };
+    sf::RectangleShape shipShape[5];
+    for (int i = 0; i < 5; i++) {
+        shipShape[i].setSize({60.f, ships[i].length * 60.f});
+    }
+    shipShape[0].setPosition({1620.f, 180.f});
+    shipShape[1].setPosition({1720.f, 180.f});
+    shipShape[2].setPosition({1720.f, 440.f});
+    shipShape[3].setPosition({1620.f, 500.f});
+    shipShape[4].setPosition({1620.f, 640.f});
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
             boardOne[i][j].setSize({60.f, 60.f});
@@ -43,13 +61,6 @@ int main() {
             boardOne[i][j].setOutlineThickness(2.f);
         }
     }
-    Ship ships[5] = {
-        {5, 0, 0, true},
-        {4, 0, 0, true},
-        {3, 0, 0, true},
-        {2, 0, 0, true},
-        {1, 0, 0, true}
-    };
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
@@ -92,20 +103,36 @@ int main() {
                     window.draw(boardOne[i][j]);
                 }
             }
-            sf::RectangleShape shipShape[5];
-            for (int i = 0; i < 5; i++) {
-                shipShape[i].setSize({60.f, ships[i].length * 60.f});
+            static bool wasLeftDown = false;
+            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+            bool pressedNow = leftDown && !wasLeftDown;
+            bool releasedNow = !leftDown && wasLeftDown;
+            if (pressedNow) {
+                for (int i = 0; i < 5; i++) {
+                    if (shipShape[i].getGlobalBounds().contains(mousePosition)) {
+                        ships[i].isDragged = true;
+                        ships[i].dragOffset = mousePosition - shipShape[i].getPosition();
+                        break;
+                    }
+                }
             }
-            shipShape[0].setPosition({1620.f, 180.f});
-            shipShape[1].setPosition({1720.f, 180.f});
-            shipShape[2].setPosition({1720.f, 440.f});
-            shipShape[3].setPosition({1620.f, 500.f});
-            shipShape[4].setPosition({1620.f, 640.f});
             for (int i = 0; i < 5; i++) {
-                shipShape[i].setFillColor(sf::Color::Green);
+                if (ships[i].isDragged) {
+                    shipShape[i].setPosition(mousePosition - ships[i].dragOffset);
+                }
+            }
+            if (releasedNow) {
+                for (int i = 0; i < 5; i++) {
+                    ships[i].isDragged = false;
+                }
+            }
+            for (int i = 0; i < 5; i++) {
+                shipShape[i].setFillColor(shipShape[i].getGlobalBounds().contains(mousePosition) ? sf::Color::Black : sf::Color::Green);
+            }
+            wasLeftDown = leftDown;
+            for (int i = 0; i < 5; i++) {
                 window.draw(shipShape[i]);
             }
-
         }
         window.display();
     }
