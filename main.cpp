@@ -136,6 +136,15 @@ int main() {
             }
             if (releasedNow) {
                 for (int i = 0; i < 5; i++) {
+                    if (ships[i].isDragged) {
+                        sf::Vector2f pos = shipShape[i].getPosition();
+                        bool insideBoard = (pos.x >= 600.f && pos.x <= 1200.f && pos.y >= 150.f && pos.y <= 750.f);
+                        if (insideBoard) {
+                            ships[i].col = static_cast<int>((pos.x - 600.f) / 60.f);
+                            ships[i].row = static_cast<int>((pos.y - 150.f) / 60.f);
+                            shipShape[i].setPosition({600.f + ships[i].col * 60.f, 150.f + ships[i].row * 60.f});
+                        }
+                    }
                     ships[i].isDragged = false;
                 }
             }
