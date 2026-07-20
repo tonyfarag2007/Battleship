@@ -4,7 +4,7 @@ class Ship {
 public:
     int length;
     int row, col;
-    bool isVertical, isDragged = false;
+    bool isVertical, isDragged = false, isPlaced = false;
     sf::Vector2f dragOffset;
 };
 enum screen {
@@ -31,6 +31,12 @@ int main() {
     playerOneText.setString("Player 1");
     sf::Text placeShipsText(font);
     placeShipsText.setString("Place Ships");
+    sf::RectangleShape nextPlayer({180.f, 90.f});
+    nextPlayer.setFillColor(sf::Color::Blue);
+    nextPlayer.setPosition({1610.f, 750.f});
+    sf::Text playerTwoText(font);
+    playerTwoText.setString("Player 2");
+    playerTwoText.setPosition({1640.f, 775.f});
     bool isOver = false;
     bool isClicked = false;
     bool isPressed = false;
@@ -125,6 +131,7 @@ int main() {
                     if (shipShape[i].getGlobalBounds().contains(mousePosition)) {
                         ships[i].isDragged = true;
                         ships[i].dragOffset = mousePosition - shipShape[i].getPosition();
+                        ships[i].isPlaced = false;
                         break;
                     }
                 }
@@ -143,10 +150,22 @@ int main() {
                             ships[i].col = static_cast<int>((pos.x - 600.f) / 60.f);
                             ships[i].row = static_cast<int>((pos.y - 150.f) / 60.f);
                             shipShape[i].setPosition({600.f + ships[i].col * 60.f, 150.f + ships[i].row * 60.f});
+                            ships[i].isPlaced = true;
                         }
                     }
                     ships[i].isDragged = false;
                 }
+            }
+            bool allShipsPlaced = true;
+            for (int i = 0; i < 5; i++) {
+                if (!ships[i].isPlaced) {
+                    allShipsPlaced = false;
+                    break;
+                }
+            }
+            if (allShipsPlaced) {
+                window.draw(nextPlayer);
+                window.draw(playerTwoText);
             }
             for (int i = 0; i < 5; i++) {
                 shipShape[i].setFillColor(shipShape[i].getGlobalBounds().contains(mousePosition) ? sf::Color::Red : sf::Color::Green);
