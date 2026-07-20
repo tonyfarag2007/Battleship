@@ -103,11 +103,24 @@ int main() {
                     window.draw(boardOne[i][j]);
                 }
             }
-            static bool wasLeftDown = false;
-            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
-            bool pressedNow = leftDown && !wasLeftDown;
+            static bool wasLeftDown = false, wasRightDown = false;
+            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+            bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
             bool releasedNow = !leftDown && wasLeftDown;
-            if (pressedNow) {
+            if (rightPressedNow) {
+                for (int i = 0; i < 5; i++) {
+                    if (shipShape[i].getGlobalBounds().contains(mousePosition)) {
+                        ships[i].isVertical = !ships[i].isVertical;
+                        if (!ships[i].isVertical) {
+                            shipShape[i].setSize({ships[i].length * 60.f, 60.f});
+                        }
+                        else {
+                            shipShape[i].setSize({60.f, ships[i].length * 60.f});
+                        }
+                    }
+                }
+            }
+            if (leftPressedNow) {
                 for (int i = 0; i < 5; i++) {
                     if (shipShape[i].getGlobalBounds().contains(mousePosition)) {
                         ships[i].isDragged = true;
@@ -127,9 +140,10 @@ int main() {
                 }
             }
             for (int i = 0; i < 5; i++) {
-                shipShape[i].setFillColor(shipShape[i].getGlobalBounds().contains(mousePosition) ? sf::Color::Black : sf::Color::Green);
+                shipShape[i].setFillColor(shipShape[i].getGlobalBounds().contains(mousePosition) ? sf::Color::Red : sf::Color::Green);
             }
             wasLeftDown = leftDown;
+            wasRightDown = rightDown;
             for (int i = 0; i < 5; i++) {
                 window.draw(shipShape[i]);
             }
