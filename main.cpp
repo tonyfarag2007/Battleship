@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <vector>
 class Ship {
 public:
     int length;
@@ -11,6 +12,23 @@ enum screen {
     WELCOME,
     GAME
 };
+std::vector<std::vector<std::pair<int, int>>> storeShipLocations(Ship ships[], int size) {
+    std::vector<std::vector<std::pair<int, int>>> shipLocations(size);
+    for (int i = 0; i < size; i++) {
+        shipLocations[i].push_back({ships[i].row, ships[i].col});
+        }
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < ships[i].length - 1; j++) {
+            if (ships[i].isVertical) {
+                shipLocations[i].push_back({ships[i].row + (j+1), ships[i].col});
+            }
+            else if (!ships[i].isVertical) {
+                shipLocations[i].push_back({ships[i].row, ships[i].col + (j+1)});
+            }
+        }
+    }
+    return shipLocations;
+    }
 int main() {
     sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
     sf::RectangleShape rect({1920.f, 540.f});
@@ -49,6 +67,7 @@ int main() {
         {2, 0, 0, true},
         {1, 0, 0, true}
     };
+    std::vector<std::vector<std::pair<int, int>>> playerOneShipLocations;
     sf::RectangleShape shipShape[5];
     for (int i = 0; i < 5; i++) {
         shipShape[i].setSize({60.f, ships[i].length * 60.f});
@@ -164,6 +183,7 @@ int main() {
                 }
             }
             if (allShipsPlaced) {
+                playerOneShipLocations = storeShipLocations(ships, 5);
                 window.draw(nextPlayer);
                 window.draw(playerTwoText);
             }
