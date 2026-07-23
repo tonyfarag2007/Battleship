@@ -11,7 +11,8 @@ public:
 enum screen {
     WELCOME,
     PLAYER_ONE,
-    PLAYER_TWO
+    PLAYER_TWO,
+    BATTLESHIP
 };
 std::vector<std::vector<std::pair<int, int>>> storeShipLocations(Ship ships[], int size) {
     std::vector<std::vector<std::pair<int, int>>> shipLocations(size);
@@ -38,6 +39,9 @@ int main() {
     sf::Font font("C:/Windows/Fonts/arial.ttf");
     sf::Text welcomeText(font);
     sf::Text buttonText(font);
+    sf::Text battleText(font);
+    battleText.setString("Battle!");
+    battleText.setPosition({910.f, 30.f});
     welcomeText.setString("Battleship");
     buttonText.setString("Start");
     welcomeText.setFillColor(sf::Color::Black);
@@ -73,7 +77,7 @@ int main() {
     bool clicked = false;
     bool Clicked = false;
     screen currentScreen = WELCOME;
-    sf::RectangleShape boardOne[10][10], boardTwo[10][10];
+    sf::RectangleShape boardOne[10][10], boardTwo[10][10], boardOneTracking[10][10], boardTwoTracking[10][10];
     Ship playerOneShips[5] = {
         {5, 0, 0, true},
         {4, 0, 0, true},
@@ -90,6 +94,7 @@ int main() {
     };
     std::vector<std::vector<std::pair<int, int>>> playerOneShipLocations, playerTwoShipLocations;
     sf::RectangleShape shipShapeOne[5], shipShapeTwo[5];
+    sf::Vector2f shipOffset(400.f, 0.f);
     for (int i = 0; i < 5; i++) {
         shipShapeOne[i].setSize({60.f, playerOneShips[i].length * 60.f});
         shipShapeTwo[i].setSize({60.f, playerTwoShips[i].length * 60.f});
@@ -111,11 +116,21 @@ int main() {
             boardOne[i][j].setFillColor(sf::Color::Blue);
             boardOne[i][j].setOutlineColor(sf::Color::Black);
             boardOne[i][j].setOutlineThickness(2.f);
+            boardOneTracking[i][j].setSize({60.f, 60.f});
+            boardOneTracking[i][j].setPosition({1120.f + j * 60.f, 150.f + i * 60.f});
+            boardOneTracking[i][j].setFillColor(sf::Color::Blue);
+            boardOneTracking[i][j].setOutlineColor(sf::Color::Black);
+            boardOneTracking[i][j].setOutlineThickness(2.f);
             boardTwo[i][j].setSize({60.f, 60.f});
             boardTwo[i][j].setPosition({600.f + j * 60.f, 150.f + i * 60.f});
             boardTwo[i][j].setFillColor(sf::Color::Blue);
             boardTwo[i][j].setOutlineColor(sf::Color::Black);
             boardTwo[i][j].setOutlineThickness(2.f);
+            boardTwoTracking[i][j].setSize({60.f, 60.f});
+            boardTwoTracking[i][j].setPosition({500.f + j * 60.f, 150.f + i * 60.f});
+            boardTwoTracking[i][j].setFillColor(sf::Color::Blue);
+            boardTwoTracking[i][j].setOutlineColor(sf::Color::Black);
+            boardTwoTracking[i][j].setOutlineThickness(2.f);
         }
     }
     while (window.isOpen()) {
@@ -142,14 +157,15 @@ int main() {
                 startButton.setFillColor(sf::Color::White);
             }
         }
-        window.clear();
         if (currentScreen == WELCOME) {
+            window.clear();
             window.draw(rect);
             window.draw(welcomeText);
             window.draw(startButton);
             window.draw(buttonText);
         }
         else if (currentScreen == PLAYER_ONE){
+            window.clear();
             playerOneText.setPosition({850.f, 30.f});
             placeShipsText.setPosition({820.f, 800.f});
             window.draw(playerOneText);
@@ -245,7 +261,8 @@ int main() {
                 window.draw(shipShapeOne[i]);
             }
         }
-        else {
+        else if (currentScreen == PLAYER_TWO){
+            window.clear();
             static bool wasLeftDown = false, wasRightDown = false;
             bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
             bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
@@ -310,7 +327,7 @@ int main() {
                         if (!Clicked) {
                             Clicked = true;
                             std::cout<<"Click!"<<std::endl;
-                            window.clear();
+                            currentScreen = BATTLESHIP;
                         }
                     }
                     else {
@@ -337,6 +354,23 @@ int main() {
             for (int i = 0; i < 5; i++) {
                 window.draw(shipShapeTwo[i]);
             }
+        }
+        else if (currentScreen == BATTLESHIP) {
+            window.clear();
+            playerOneText.setPosition({910.f, 800.f});
+            for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 10; j++) {
+                    boardOne[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
+                    window.draw(boardOne[i][j]);
+                    window.draw(boardOneTracking[i][j]);
+                }
+            }
+            for (int i = 0; i < 5; i++) {
+                shipShapeOne[i].setPosition({(600.f + playerOneShips[i].col * 60.f) - 400.f, 150.f + playerOneShips[i].row * 60.f});
+                window.draw(shipShapeOne[i]);
+            }
+            window.draw(battleText);
+            window.draw(playerOneText);
         }
         window.display();
     }
