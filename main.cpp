@@ -76,6 +76,7 @@ int main() {
     bool isPressed = false;
     bool clicked = false;
     bool Clicked = false;
+    bool isSelected = false;
     screen currentScreen = WELCOME;
     sf::RectangleShape boardOne[10][10], boardTwo[10][10], boardOneTracking[10][10], boardTwoTracking[10][10];
     Ship playerOneShips[5] = {
@@ -115,22 +116,22 @@ int main() {
             boardOne[i][j].setPosition({600.f + j * 60.f, 150.f + i * 60.f});
             boardOne[i][j].setFillColor(sf::Color::Blue);
             boardOne[i][j].setOutlineColor(sf::Color::Black);
-            boardOne[i][j].setOutlineThickness(2.f);
+            boardOne[i][j].setOutlineThickness(0.f);
             boardOneTracking[i][j].setSize({60.f, 60.f});
             boardOneTracking[i][j].setPosition({1120.f + j * 60.f, 150.f + i * 60.f});
             boardOneTracking[i][j].setFillColor(sf::Color::Blue);
             boardOneTracking[i][j].setOutlineColor(sf::Color::Black);
-            boardOneTracking[i][j].setOutlineThickness(2.f);
+            boardOneTracking[i][j].setOutlineThickness(0.f);
             boardTwo[i][j].setSize({60.f, 60.f});
             boardTwo[i][j].setPosition({600.f + j * 60.f, 150.f + i * 60.f});
             boardTwo[i][j].setFillColor(sf::Color::Blue);
             boardTwo[i][j].setOutlineColor(sf::Color::Black);
-            boardTwo[i][j].setOutlineThickness(2.f);
+            boardTwo[i][j].setOutlineThickness(0.f);
             boardTwoTracking[i][j].setSize({60.f, 60.f});
             boardTwoTracking[i][j].setPosition({500.f + j * 60.f, 150.f + i * 60.f});
             boardTwoTracking[i][j].setFillColor(sf::Color::Blue);
             boardTwoTracking[i][j].setOutlineColor(sf::Color::Black);
-            boardTwoTracking[i][j].setOutlineThickness(2.f);
+            boardTwoTracking[i][j].setOutlineThickness(0.f);
         }
     }
     while (window.isOpen()) {
@@ -175,6 +176,18 @@ int main() {
                 for (int j = 0; j < 10; j++) {
                     window.draw(boardOne[i][j]);
                 }
+            }
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineOne({1.f, 600.f});
+                lineOne.setFillColor(sf::Color::Black);
+                lineOne.setPosition({600.f + j * 60.f, 150.f});
+                window.draw(lineOne);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineOne({600.f, 1.f});
+                lineOne.setFillColor(sf::Color::Black);
+                lineOne.setPosition({600.f, 150.f + i * 60.f});
+                window.draw(lineOne);
             }
             static bool wasLeftDown = false, wasRightDown = false;
             bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
@@ -351,6 +364,18 @@ int main() {
                     window.draw(boardTwo[i][j]);
                 }
             }
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineTwo({1.f, 600.f});
+                lineTwo.setFillColor(sf::Color::Black);
+                lineTwo.setPosition({600.f + j * 60.f, 150.f});
+                window.draw(lineTwo);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineTwo({600.f, 1.f});
+                lineTwo.setFillColor(sf::Color::Black);
+                lineTwo.setPosition({600.f, 150.f + i * 60.f});
+                window.draw(lineTwo);
+            }
             for (int i = 0; i < 5; i++) {
                 window.draw(shipShapeTwo[i]);
             }
@@ -365,12 +390,51 @@ int main() {
                     window.draw(boardOneTracking[i][j]);
                 }
             }
+            for (int i = 0; i<10; i++) {
+                for (int j = 0; j<10; j++) {
+                    if (boardOneTracking[i][j].getGlobalBounds().contains(mousePosition) && !isSelected) {
+                        boardOneTracking[i][j].setFillColor(sf::Color::Red);
+                        if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                            if (!isSelected) {
+                                isSelected = true;
+                            }
+                        }
+                    }
+                    else if (!boardOneTracking[i][j].getGlobalBounds().contains(mousePosition) && !isSelected){
+                        boardOneTracking[i][j].setFillColor(sf::Color::Blue);
+                    }
+                }
+            }
+            window.draw(battleText);
+            window.draw(playerOneText);
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineOne({1.f, 600.f});
+                lineOne.setFillColor(sf::Color::Black);
+                lineOne.setPosition({1120.f + j * 60.f, 150.f});
+                window.draw(lineOne);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineOne({600.f, 1.f});
+                lineOne.setFillColor(sf::Color::Black);
+                lineOne.setPosition({1120.f, 150.f + i * 60.f});
+                window.draw(lineOne);
+            }
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineOne({1.f, 600.f});
+                lineOne.setFillColor(sf::Color::Black);
+                lineOne.setPosition({200.f + j * 60.f, 150.f});
+                window.draw(lineOne);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineOneTracking({600.f, 1.f});
+                lineOneTracking.setFillColor(sf::Color::Black);
+                lineOneTracking.setPosition({200.f, 150.f + i * 60.f});
+                window.draw(lineOneTracking);
+            }
             for (int i = 0; i < 5; i++) {
                 shipShapeOne[i].setPosition({(600.f + playerOneShips[i].col * 60.f) - 400.f, 150.f + playerOneShips[i].row * 60.f});
                 window.draw(shipShapeOne[i]);
             }
-            window.draw(battleText);
-            window.draw(playerOneText);
         }
         window.display();
     }
