@@ -82,6 +82,7 @@ int main() {
     bool isSelected = false;
     bool isPlayerOneTurn = true, isPlayerTwoTurn = false, playerOnePass = false, playerTwoPass = false;
     bool flagOne = false, flagTwo = false;
+    int hitCountOne = 0, hitCountTwo = 0;
     screen currentScreen = WELCOME;
     sf::RectangleShape boardOne[10][10], boardTwo[10][10], boardOneTracking[10][10], boardTwoTracking[10][10];
     Ship playerOneShips[5] = {
@@ -389,6 +390,10 @@ int main() {
             bool releasedNow = !leftDown && wasLeftDown;
             playerOneText.setPosition({910.f, 800.f});
             if (isPlayerOneTurn) {
+                player_hit_anchor_player_one:
+                if (hitCountOne == 15) {
+                    exit(0);
+                }
                 for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 10; j++) {
                     boardOne[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
@@ -440,10 +445,12 @@ int main() {
                                     int rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
                                     for (int k = 0; k < 5 && !flagOne; k++) {
                                         for (int l = 0; l < playerTwoShips[k].length && !flagOne; l++) {
-                                            if (playerTwoShipLocations[k][l].first == rowHit && playerTwoShipLocations[k][l].second == colHit) {
+                                            if (playerTwoShipLocations[k][l].first == rowHit &&
+                                                playerTwoShipLocations[k][l].second == colHit) {
                                                 std::cout<<"Player 2 Ship Hit!"<<std::endl;
                                                 boardOneTracking[i][j].setFillColor(sf::Color::Red);
-                                                flagOne = true;
+                                                hitCountOne++;
+                                                goto player_hit_anchor_player_one;
                                             }
                                         }
                                     }
@@ -483,6 +490,10 @@ int main() {
                 }
             }
              else if (isPlayerTwoTurn) {
+                 player_hit_anchor_player_two:
+                 if (hitCountTwo == 15) {
+                     exit(0);
+                 }
                 playerTwo.setPosition({910.f, 800.f});
                 window.draw(battleText);
                 window.draw(playerTwo);
@@ -534,7 +545,8 @@ int main() {
                                         if (playerOneShipLocations[k][l].first == rowHit && playerOneShipLocations[k][l].second == colHit) {
                                             std::cout<<"Player 1 Ship Hit!"<<std::endl;
                                             boardTwoTracking[i][j].setFillColor(sf::Color::Red);
-                                            flagTwo = true;
+                                            hitCountTwo++;
+                                            goto player_hit_anchor_player_two;
                                         }
                                     }
                                 }
