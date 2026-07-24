@@ -71,12 +71,17 @@ int main() {
     sf::RectangleShape battleButton({180.f, 90.f});
     battleButton.setPosition({1610.f, 750.f});
     battleButton.setFillColor(sf::Color::Blue);
+    sf::RectangleShape nextTurn({180.f, 90.f});
+    nextTurn.setPosition({1400.f, 800.f});
+    nextTurn.setFillColor(sf::Color::Yellow);
     bool isOver = false;
     bool isClicked = false;
     bool isPressed = false;
     bool clicked = false;
     bool Clicked = false;
     bool isSelected = false;
+    bool isPlayerOneTurn = true, isPlayerTwoTurn = false;
+    bool flag = false;
     screen currentScreen = WELCOME;
     sf::RectangleShape boardOne[10][10], boardTwo[10][10], boardOneTracking[10][10], boardTwoTracking[10][10];
     Ship playerOneShips[5] = {
@@ -382,6 +387,10 @@ int main() {
         }
         else if (currentScreen == BATTLESHIP) {
             window.clear();
+            static bool wasLeftDown = false, wasRightDown = false;
+            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+            bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
+            bool releasedNow = !leftDown && wasLeftDown;
             playerOneText.setPosition({910.f, 800.f});
             for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 10; j++) {
@@ -390,18 +399,33 @@ int main() {
                     window.draw(boardOneTracking[i][j]);
                 }
             }
-            for (int i = 0; i<10; i++) {
-                for (int j = 0; j<10; j++) {
-                    if (boardOneTracking[i][j].getGlobalBounds().contains(mousePosition) && !isSelected) {
-                        boardOneTracking[i][j].setFillColor(sf::Color::Red);
-                        if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                            if (!isSelected) {
-                                isSelected = true;
+            if (isPlayerOneTurn) {
+                for (int i = 0; i<10; i++) {
+                    for (int j = 0; j<10; j++) {
+                        if (boardOneTracking[i][j].getGlobalBounds().contains(mousePosition)) {
+                            boardOneTracking[i][j].setFillColor(sf::Color::Red);
+                            if(leftPressedNow) {
+                                sf::Vector2f hitLocation(mousePosition);
+                                int colHit = static_cast<int>((hitLocation.x - 1120.f)/60.f);
+                                int rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
+                                for (int i = 0; i < 5 && !flag; i++) {
+                                    for (int j = 0; j < playerTwoShips[i].length && !flag; j++) {
+                                        if (playerTwoShipLocations[i][j].first == rowHit && playerTwoShipLocations[i][j].second == colHit) {
+                                            std::cout<<"Player 2 Ship Hit!"<<std::endl;
+                                            flag = true;
+                                        }
+                                    }
+                                }
+                                if (!flag) {
+                                    std::cout<<"Miss!";
+                                    flag = true;
+                                }
+                                isPlayerOneTurn = false;
                             }
                         }
-                    }
-                    else if (!boardOneTracking[i][j].getGlobalBounds().contains(mousePosition) && !isSelected){
-                        boardOneTracking[i][j].setFillColor(sf::Color::Blue);
+                        else if (!boardOneTracking[i][j].getGlobalBounds().contains(mousePosition)){
+                            boardOneTracking[i][j].setFillColor(sf::Color::Blue);
+                        }
                     }
                 }
             }
@@ -435,6 +459,7 @@ int main() {
                 shipShapeOne[i].setPosition({(600.f + playerOneShips[i].col * 60.f) - 400.f, 150.f + playerOneShips[i].row * 60.f});
                 window.draw(shipShapeOne[i]);
             }
+
         }
         window.display();
     }
