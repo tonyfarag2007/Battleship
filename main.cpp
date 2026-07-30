@@ -31,6 +31,22 @@ std::vector<std::vector<std::pair<int, int>>> storeShipLocations(Ship ships[], i
     }
     return shipLocations;
     }
+bool isOverlapping(std::vector<std::vector<std::pair<int, int>>> playerShipLocations, Ship ships[], int size) {
+    for (int g = 0; g < 5; g++) {
+        int shipIndex = g;
+        for (int h = 0; h < 5; h++){
+            if (h == shipIndex) continue;
+            for (int i = 0; i < ships[g].length; i++) {
+                for (int j = 0; j < ships[h].length; j++) {
+                    if (playerShipLocations[g][i] == playerShipLocations[h][j]) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 int main() {
     sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
     sf::RectangleShape rect({1920.f, 540.f});
@@ -79,7 +95,6 @@ int main() {
     bool isPressed = false;
     bool clicked = false;
     bool Clicked = false;
-    bool isSelected = false;
     bool isPlayerOneTurn = true, isPlayerTwoTurn = false, playerOnePass = false, playerTwoPass = false;
     bool flagOne = false, flagTwo = false;
     int hitCountOne = 0, hitCountTwo = 0;
@@ -250,23 +265,25 @@ int main() {
             }
             if (allShipsPlaced) {
                 playerOneShipLocations = storeShipLocations(playerOneShips, 5);
-                window.draw(nextPlayer);
-                window.draw(playerTwoText);
-                if (nextPlayer.getGlobalBounds().contains(mousePosition)) {
-                    nextPlayer.setFillColor(sf::Color::Green);
-                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                        if (!clicked) {
-                            currentScreen = PLAYER_TWO;
-                            clicked = true;
-                            std::cout<<"Click!"<<std::endl;
+                if (!isOverlapping(playerOneShipLocations, playerOneShips, 5)) {
+                    window.draw(nextPlayer);
+                    window.draw(playerTwoText);
+                    if (nextPlayer.getGlobalBounds().contains(mousePosition)) {
+                        nextPlayer.setFillColor(sf::Color::Green);
+                        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                            if (!clicked) {
+                                currentScreen = PLAYER_TWO;
+                                clicked = true;
+                                std::cout<<"Click!"<<std::endl;
+                            }
+                        }
+                        else {
+                            clicked = false;
                         }
                     }
                     else {
-                        clicked = false;
+                        nextPlayer.setFillColor(sf::Color::Blue);
                     }
-                }
-                else {
-                    nextPlayer.setFillColor(sf::Color::Blue);
                 }
             }
             for (int i = 0; i < 5; i++) {
@@ -335,23 +352,25 @@ int main() {
             }
             if (allShipsPlaced) {
                 playerTwoShipLocations = storeShipLocations(playerTwoShips, 5);
-                window.draw(battleButton);
-                window.draw(battle);
-                if (battleButton.getGlobalBounds().contains(mousePosition)) {
-                    battleButton.setFillColor(sf::Color::Green);
-                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                        if (!Clicked) {
-                            Clicked = true;
-                            std::cout<<"Click!"<<std::endl;
-                            currentScreen = BATTLESHIP;
+                if (!isOverlapping(playerTwoShipLocations, playerTwoShips, 5)) {
+                    window.draw(battleButton);
+                    window.draw(battle);
+                    if (battleButton.getGlobalBounds().contains(mousePosition)) {
+                        battleButton.setFillColor(sf::Color::Green);
+                        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                            if (!Clicked) {
+                                Clicked = true;
+                                std::cout<<"Click!"<<std::endl;
+                                currentScreen = BATTLESHIP;
+                            }
+                        }
+                        else {
+                            Clicked = false;
                         }
                     }
                     else {
-                        Clicked = false;
+                        battleButton.setFillColor(sf::Color::Blue);
                     }
-                }
-                else {
-                    battleButton.setFillColor(sf::Color::Blue);
                 }
             }
             window.draw(playerTwo);
