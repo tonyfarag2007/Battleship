@@ -47,6 +47,17 @@ bool isOverlapping(std::vector<std::vector<std::pair<int, int>>> playerShipLocat
     }
     return false;
 }
+bool isHanging(std::vector<std::vector<std::pair<int, int>>> playerShipLocations, Ship ships[], int size) {
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < ships[i].length; j++) {
+            if (playerShipLocations[i][j].first > 9 || playerShipLocations[i][j].first < 0
+                || playerShipLocations[i][j].second > 9 || playerShipLocations[i][j].second < 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 int main() {
     sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
     sf::RectangleShape rect({1920.f, 540.f});
@@ -265,7 +276,7 @@ int main() {
             }
             if (allShipsPlaced) {
                 playerOneShipLocations = storeShipLocations(playerOneShips, 5);
-                if (!isOverlapping(playerOneShipLocations, playerOneShips, 5)) {
+                if (!isOverlapping(playerOneShipLocations, playerOneShips, 5) && !isHanging(playerOneShipLocations, playerOneShips, 5)) {
                     window.draw(nextPlayer);
                     window.draw(playerTwoText);
                     if (nextPlayer.getGlobalBounds().contains(mousePosition)) {
@@ -352,7 +363,7 @@ int main() {
             }
             if (allShipsPlaced) {
                 playerTwoShipLocations = storeShipLocations(playerTwoShips, 5);
-                if (!isOverlapping(playerTwoShipLocations, playerTwoShips, 5)) {
+                if (!isOverlapping(playerTwoShipLocations, playerTwoShips, 5) && !isHanging(playerTwoShipLocations, playerTwoShips, 5)) {
                     window.draw(battleButton);
                     window.draw(battle);
                     if (battleButton.getGlobalBounds().contains(mousePosition)) {
