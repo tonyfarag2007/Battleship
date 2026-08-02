@@ -9,12 +9,31 @@ public:
     bool isVertical, isDragged = false, isPlaced = false;
     sf::Vector2f dragOffset;
 };
+class Player {
+public:
+    Ship ships[5] = {
+        {5, 0, 0, 0, true},
+        {4, 0, 0, 0, true},
+        {3, 0, 0, 0, true},
+        {2, 0, 0, 0, true},
+        {1, 0, 0, 0, true}
+};
+    sf::RectangleShape board[10][10], trackingBoard[10][10], shipShapes[5];
+    std::vector<std::vector<std::pair<int, int>>> shipLocations;
+    int hitCount = 0;
+    bool hitFlag = false, hasPassed = false;
+};
+Player playerOne, playerTwo;
 enum screen {
     WELCOME,
     PLAYER_ONE,
     PLAYER_TWO,
     BATTLESHIP,
     GAME_OVER
+};
+enum winner {
+    PLAYER_1,
+    PLAYER_2
 };
 std::vector<std::vector<std::pair<int, int>>> storeShipLocations(Ship ships[], int size) {
     std::vector<std::vector<std::pair<int, int>>> shipLocations(size);
@@ -106,9 +125,7 @@ int main() {
     nextTurn.setPosition({1400.f, 800.f});
     nextTurn.setFillColor(sf::Color::Yellow);
     sf::Color customWhite(255, 255, 255, 180);
-    bool isOver = false;
     bool isClicked = false;
-    bool isPressed = false;
     bool clicked = false;
     bool Clicked = false;
     bool isPlayerOneTurn = true, isPlayerTwoTurn = false, playerOnePass = false, playerTwoPass = false;
@@ -133,7 +150,6 @@ int main() {
     };
     std::vector<std::vector<std::pair<int, int>>> playerOneShipLocations, playerTwoShipLocations;
     sf::RectangleShape shipShapeOne[5], shipShapeTwo[5];
-    sf::Vector2f shipOffset(400.f, 0.f);
     for (int i = 0; i < 5; i++) {
         shipShapeOne[i].setSize({60.f, playerOneShips[i].length * 60.f});
         shipShapeTwo[i].setSize({60.f, playerTwoShips[i].length * 60.f});
@@ -431,7 +447,7 @@ int main() {
                 player_hit_anchor_player_one:
                 if (hitCountOne == 15) {
                     currentScreen = GAME_OVER;
-                    winner = 1;
+                    winner = PLAYER_1;
                 }
                 for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 10; j++) {
@@ -545,7 +561,7 @@ int main() {
                  player_hit_anchor_player_two:
                  if (hitCountTwo == 15) {
                      currentScreen = GAME_OVER;
-                     winner = 2;
+                     winner = PLAYER_2;
                  }
                 playerTwo.setPosition({910.f, 800.f});
                 window.draw(battleText);
@@ -655,10 +671,12 @@ int main() {
         }
         else if (currentScreen == GAME_OVER) {
             switch (winner) {
-                case 1:
+                case PLAYER_1:
                     gameOver.setString("Game over, Player 1 Won!");
-                case 2:
+                    break;
+                case PLAYER_2:
                     gameOver.setString("Game over, Player 2 Won!");
+                    break;
             }
             window.draw(gameOver);
         }
