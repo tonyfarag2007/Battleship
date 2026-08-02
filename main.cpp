@@ -131,23 +131,6 @@ int main() {
     bool isPlayerOneTurn = true, isPlayerTwoTurn = false;
     int winner;
     screen currentScreen = WELCOME;
-    sf::RectangleShape boardOne[10][10], boardTwo[10][10], boardOneTracking[10][10], boardTwoTracking[10][10];
-    Ship playerOneShips[5] = {
-        {5, 0, 0, 0, true},
-        {4, 0, 0, 0, true},
-        {3, 0, 0, 0, true},
-        {2, 0, 0, 0, true},
-        {1, 0, 0, 0, true}
-    };
-    Ship playerTwoShips[5] = {
-        {5, 0, 0, 0, true},
-        {4, 0, 0, 0, true},
-        {3, 0, 0, 0, true},
-        {2, 0, 0, 0, true},
-        {1, 0, 0, 0, true}
-    };
-    std::vector<std::vector<std::pair<int, int>>> playerOneShipLocations, playerTwoShipLocations;
-    sf::RectangleShape shipShapeOne[5], shipShapeTwo[5];
     for (int i = 0; i < 5; i++) {
         playerOne.shipShapes[i].setSize({60.f, playerOne.ships[i].length * 60.f});
         playerTwo.shipShapes[i].setSize({60.f, playerTwo.ships[i].length * 60.f});
