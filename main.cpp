@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
 class Ship {
 public:
     int length;
@@ -21,7 +22,7 @@ public:
     sf::RectangleShape board[10][10], trackingBoard[10][10], shipShapes[5];
     std::vector<std::vector<std::pair<int, int>>> shipLocations;
     int hitCount = 0;
-    bool hitFlag = false, hasPassed = false;
+    bool hasPassed = false;
 };
 Player playerOne, playerTwo;
 enum screen {
@@ -35,6 +36,7 @@ enum winner {
     PLAYER_1,
     PLAYER_2
 };
+sf::Color customWhite(255, 255, 255, 180);
 std::vector<std::vector<std::pair<int, int>>> storeShipLocations(Ship ships[], int size) {
     std::vector<std::vector<std::pair<int, int>>> shipLocations(size);
     for (int i = 0; i < size; i++) {
@@ -79,8 +81,123 @@ bool isHanging(std::vector<std::vector<std::pair<int, int>>> playerShipLocations
     }
     return false;
 }
+bool placeShips(Player& player) {
+    auto mousePosition = sf::Vector2f(sf::Mouse::getPosition(window));
+    static bool wasLeftDown = false, wasRightDown = false;
+            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+            bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
+            bool releasedNow = !leftDown && wasLeftDown;
+            if (rightPressedNow) {
+                for (int i = 0; i < 5; i++) {
+                    if (player.shipShapes[i].getGlobalBounds().contains(mousePosition)) {
+                        player.ships[i].isVertical = !player.ships[i].isVertical;
+                        if (!player.ships[i].isVertical) {
+                            player.shipShapes[i].setSize({player.ships[i].length * 60.f, 60.f});
+                        }
+                        else {
+                            player.shipShapes[i].setSize({60.f, player.ships[i].length * 60.f});
+                        }
+                        break;
+                    }
+                }
+            }
+            if (leftPressedNow) {
+                for (int i = 0; i < 5; i++) {
+                    if (player.shipShapes[i].getGlobalBounds().contains(mousePosition)) {
+                        player.ships[i].isDragged = true;
+                        player.ships[i].dragOffset = mousePosition - player.shipShapes[i].getPosition();
+                        player.ships[i].isPlaced = false;
+                        break;
+                    }
+                }
+            }
+            for (int i = 0; i < 5; i++) {
+                if (player.ships[i].isDragged) {
+                    player.shipShapes[i].setPosition(mousePosition - player.ships[i].dragOffset);
+                }
+            }
+            if (releasedNow) {
+                for (int i = 0; i < 5; i++) {
+                    if (player.ships[i].isDragged) {
+                        sf::Vector2f pos = player.shipShapes[i].getPosition();
+                        bool insideBoard = (pos.x >= 600.f && pos.x <= 1200.f && pos.y >= 150.f && pos.y <= 750.f);
+                        if (insideBoard) {
+                            player.ships[i].col = static_cast<int>((pos.x - 600.f) / 60.f);
+                            player.ships[i].row = static_cast<int>((pos.y - 150.f) / 60.f);
+                            player.shipShapes[i].setPosition({600.f + player.ships[i].col * 60.f, 150.f + player.ships[i].row * 60.f});
+                            player.ships[i].isPlaced = true;
+                        }
+                    }
+                    player.ships[i].isDragged = false;
+                }
+            }
+    wasLeftDown = leftDown;
+    wasRightDown = rightDown;
+            for (int i = 0; i < 5; i++) {
+                if (!player.ships[i].isPlaced) {
+                    return false;
+                }
+            }
+    return true;
+}
+void attack(Player& player, Player& otherPlayer) {
+    auto mousePosition = sf::Vector2f(sf::Mouse::getPosition(window));
+    static bool wasLeftDown = false;
+    bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+    bool leftPressedNow = leftDown && !wasLeftDown;
+    bool hit = false;
+                for (int i = 0; i<10; i++) {
+                    for (int j = 0; j<10; j++) {
+                            if (player.trackingBoard[i][j].getGlobalBounds().contains(mousePosition) &&
+                                player.trackingBoard[i][j].getFillColor() != sf::Color::Red &&
+                                player.trackingBoard[i][j].getFillColor() != customWhite &&
+                                player.trackingBoard[i][j].getFillColor() != sf::Color::Cyan) {
+                                player.trackingBoard[i][j].setFillColor(sf::Color::Yellow);
+                                if(leftPressedNow) {
+                                    sf::Vector2f hitLocation(mousePosition);
+                                    int colHit = static_cast<int>((hitLocation.x - 1120.f)/60.f);
+                                    int rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
+                                    for (int k = 0; k < 5; k++) {
+                                        for (int l = 0; l < otherPlayer.ships[k].length; l++) {
+                                            if (otherPlayer.shipLocations[k][l].first == rowHit &&
+                                                otherPlayer.shipLocations[k][l].second == colHit) {
+                                                player.trackingBoard[i][j].setFillColor(sf::Color::Red);
+                                                otherPlayer.board[i][j].setFillColor(sf::Color::Red);
+                                                player.hitCount++;
+                                                hit = true;
+                                                otherPlayer.ships[k].cellsHit++;
+                                                if (otherPlayer.ships[k].cellsHit == otherPlayer.ships[k].length) {
+                                                    for (int m = 0; m < otherPlayer.ships[k].length; m++) {
+                                                        player.trackingBoard[otherPlayer.shipLocations[k][m]
+                                                            .first][otherPlayer.shipLocations[k][m].second]
+                                                        .setFillColor(sf::Color::Cyan);
+                                                        otherPlayer.board[otherPlayer.shipLocations[k][m].first]
+                                                        [otherPlayer.shipLocations[k][m].second]
+                                                        .setFillColor(sf::Color::Cyan);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!hit) {
+                                        player.trackingBoard[i][j].setFillColor(customWhite);
+                                        otherPlayer.board[i][j].setFillColor(customWhite);
+                                        player.hasPassed = true;
+                                    }
+                                }
+                            }
+                        else if (!player.trackingBoard[i][j].getGlobalBounds().contains(mousePosition)
+                            && player.trackingBoard[i][j].getFillColor() == sf::Color::Yellow) {
+                            player.trackingBoard[i][j].setFillColor(sf::Color::Blue);
+                        }
+                    }
+                }
+    wasLeftDown = leftDown;
+}
+bool playerWins(Player& player) {
+    return player.hitCount == 15;
+}
 int main() {
-    sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
     sf::RectangleShape rect({1920.f, 540.f});
     sf::RectangleShape startButton({200.f, 100.f});
     rect.setFillColor(sf::Color::Red);
@@ -104,7 +221,6 @@ int main() {
     playerOneText.setString("Player 1");
     sf::Text player2(font);
     player2.setString("Player 2");
-    player2.setPosition({850.f, 30.f});
     sf::Text placeShipsText(font);
     placeShipsText.setString("Place Ships");
     sf::RectangleShape nextPlayer({180.f, 90.f});
@@ -124,7 +240,6 @@ int main() {
     sf::RectangleShape nextTurn({180.f, 90.f});
     nextTurn.setPosition({1400.f, 800.f});
     nextTurn.setFillColor(sf::Color::Yellow);
-    sf::Color customWhite(255, 255, 255, 180);
     bool isClicked = false;
     bool clicked = false;
     bool Clicked = false;
@@ -223,61 +338,7 @@ int main() {
                 lineOne.setPosition({600.f, 150.f + i * 60.f});
                 window.draw(lineOne);
             }
-            static bool wasLeftDown = false, wasRightDown = false;
-            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
-            bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
-            bool releasedNow = !leftDown && wasLeftDown;
-            if (rightPressedNow) {
-                for (int i = 0; i < 5; i++) {
-                    if (playerOne.shipShapes[i].getGlobalBounds().contains(mousePosition)) {
-                        playerOne.ships[i].isVertical = !playerOne.ships[i].isVertical;
-                        if (!playerOne.ships[i].isVertical) {
-                            playerOne.shipShapes[i].setSize({playerOne.ships[i].length * 60.f, 60.f});
-                        }
-                        else {
-                            playerOne.shipShapes[i].setSize({60.f, playerOne.ships[i].length * 60.f});
-                        }
-                    }
-                }
-            }
-            if (leftPressedNow) {
-                for (int i = 0; i < 5; i++) {
-                    if (playerOne.shipShapes[i].getGlobalBounds().contains(mousePosition)) {
-                        playerOne.ships[i].isDragged = true;
-                        playerOne.ships[i].dragOffset = mousePosition - playerOne.shipShapes[i].getPosition();
-                        playerOne.ships[i].isPlaced = false;
-                        break;
-                    }
-                }
-            }
-            for (int i = 0; i < 5; i++) {
-                if (playerOne.ships[i].isDragged) {
-                    playerOne.shipShapes[i].setPosition(mousePosition - playerOne.ships[i].dragOffset);
-                }
-            }
-            if (releasedNow) {
-                for (int i = 0; i < 5; i++) {
-                    if (playerOne.ships[i].isDragged) {
-                        sf::Vector2f pos = playerOne.shipShapes[i].getPosition();
-                        bool insideBoard = (pos.x >= 600.f && pos.x <= 1200.f && pos.y >= 150.f && pos.y <= 750.f);
-                        if (insideBoard) {
-                            playerOne.ships[i].col = static_cast<int>((pos.x - 600.f) / 60.f);
-                            playerOne.ships[i].row = static_cast<int>((pos.y - 150.f) / 60.f);
-                            playerOne.shipShapes[i].setPosition({600.f + playerOne.ships[i].col * 60.f, 150.f + playerOne.ships[i].row * 60.f});
-                            playerOne.ships[i].isPlaced = true;
-                        }
-                    }
-                    playerOne.ships[i].isDragged = false;
-                }
-            }
-            bool allShipsPlaced = true;
-            for (int i = 0; i < 5; i++) {
-                if (!playerOne.ships[i].isPlaced) {
-                    allShipsPlaced = false;
-                    break;
-                }
-            }
-            if (allShipsPlaced) {
+            if (placeShips(playerOne)) {
                 playerOne.shipLocations = storeShipLocations(playerOne.ships, 5);
                 if (!isOverlapping(playerOne.shipLocations, playerOne.ships, 5) && !isHanging(playerOne.shipLocations, playerOne.ships, 5)) {
                     window.draw(nextPlayer);
@@ -304,68 +365,36 @@ int main() {
                 playerOne.shipShapes[i].setFillColor(playerOne.shipShapes[i].getGlobalBounds().contains(mousePosition) ?
                     sf::Color(255, 0, 0, 150) : sf::Color(0, 255, 0, 150));
             }
-            wasLeftDown = leftDown;
-            wasRightDown = rightDown;
             for (int i = 0; i < 5; i++) {
                 window.draw(playerOne.shipShapes[i]);
             }
         }
         else if (currentScreen == PLAYER_TWO){
-            static bool wasLeftDown = false, wasRightDown = false;
-            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
-            bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
-            bool releasedNow = !leftDown && wasLeftDown;
-            if (rightPressedNow) {
-                for (int i = 0; i < 5; i++) {
-                    if (playerTwo.shipShapes[i].getGlobalBounds().contains(mousePosition)) {
-                        playerTwo.ships[i].isVertical = !playerTwo.ships[i].isVertical;
-                        if (!playerTwo.ships[i].isVertical) {
-                            playerTwo.shipShapes[i].setSize({playerTwo.ships[i].length * 60.f, 60.f});
-                        }
-                        else {
-                            playerTwo.shipShapes[i].setSize({60.f, playerTwo.ships[i].length * 60.f});
-                        }
-                    }
+            player2.setPosition({850.f, 30.f});
+            window.draw(player2);
+            window.draw(placeShipsText);
+            window.draw(shipLoader);
+            for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 10; j++) {
+                    window.draw(playerTwo.board[i][j]);
                 }
             }
-            if (leftPressedNow) {
-                for (int i = 0; i < 5; i++) {
-                    if (playerTwo.shipShapes[i].getGlobalBounds().contains(mousePosition)) {
-                        playerTwo.ships[i].isDragged = true;
-                        playerTwo.ships[i].dragOffset = mousePosition - playerTwo.shipShapes[i].getPosition();
-                        playerTwo.ships[i].isPlaced = false;
-                        break;
-                    }
-                }
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineTwoVertical({1.f, 600.f});
+                lineTwoVertical.setFillColor(sf::Color::Black);
+                lineTwoVertical.setPosition({600.f + j * 60.f, 150.f});
+                window.draw(lineTwoVertical);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineTwoHorizontal({600.f, 1.f});
+                lineTwoHorizontal.setFillColor(sf::Color::Black);
+                lineTwoHorizontal.setPosition({600.f, 150.f + i * 60.f});
+                window.draw(lineTwoHorizontal);
             }
             for (int i = 0; i < 5; i++) {
-                if (playerTwo.ships[i].isDragged) {
-                    playerTwo.shipShapes[i].setPosition(mousePosition - playerTwo.ships[i].dragOffset);
-                }
+                window.draw(playerTwo.shipShapes[i]);
             }
-            if (releasedNow) {
-                for (int i = 0; i < 5; i++) {
-                    if (playerTwo.ships[i].isDragged) {
-                        sf::Vector2f pos = playerTwo.shipShapes[i].getPosition();
-                        bool insideBoard = (pos.x >= 600.f && pos.x <= 1200.f && pos.y >= 150.f && pos.y <= 750.f);
-                        if (insideBoard) {
-                            playerTwo.ships[i].col = static_cast<int>((pos.x - 600.f) / 60.f);
-                            playerTwo.ships[i].row = static_cast<int>((pos.y - 150.f) / 60.f);
-                            playerTwo.shipShapes[i].setPosition({600.f + playerTwo.ships[i].col * 60.f, 150.f + playerTwo.ships[i].row * 60.f});
-                            playerTwo.ships[i].isPlaced = true;
-                        }
-                    }
-                    playerTwo.ships[i].isDragged = false;
-                }
-            }
-            bool allShipsPlaced = true;
-            for (int i = 0; i < 5; i++) {
-                if (!playerTwo.ships[i].isPlaced) {
-                    allShipsPlaced = false;
-                    break;
-                }
-            }
-            if (allShipsPlaced) {
+            if (placeShips(playerTwo)) {
                 playerTwo.shipLocations = storeShipLocations(playerTwo.ships, 5);
                 if (!isOverlapping(playerTwo.shipLocations, playerTwo.ships, 5) && !isHanging(playerTwo.shipLocations, playerTwo.ships, 5)) {
                     window.draw(battleButton);
@@ -388,45 +417,20 @@ int main() {
                     }
                 }
             }
-            window.draw(player2);
-            window.draw(placeShipsText);
-            window.draw(shipLoader);
             for (int i = 0; i < 5; i++) {
                 playerTwo.shipShapes[i].setFillColor(playerTwo.shipShapes[i].getGlobalBounds().contains(mousePosition) ?
                     sf::Color(255, 0, 0, 150) : sf::Color(0, 255, 0, 150));
             }
-            wasLeftDown = leftDown;
-            wasRightDown = rightDown;
-            for (int i = 0; i < 10; i++) {
-                for (int j = 0; j < 10; j++) {
-                    window.draw(playerTwo.board[i][j]);
-                }
-            }
-            for (int j = 0; j <= 10; j++) {
-                sf::RectangleShape lineTwoVertical({1.f, 600.f});
-                lineTwoVertical.setFillColor(sf::Color::Black);
-                lineTwoVertical.setPosition({600.f + j * 60.f, 150.f});
-                window.draw(lineTwoVertical);
-            }
-            for (int i = 0; i <= 10; i++) {
-                sf::RectangleShape lineTwoHorizontal({600.f, 1.f});
-                lineTwoHorizontal.setFillColor(sf::Color::Black);
-                lineTwoHorizontal.setPosition({600.f, 150.f + i * 60.f});
-                window.draw(lineTwoHorizontal);
-            }
-            for (int i = 0; i < 5; i++) {
-                window.draw(playerTwo.shipShapes[i]);
-            }
         }
         else if (currentScreen == BATTLESHIP) {
             static bool wasLeftDown = false, wasRightDown = false;
-            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left), rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+            bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left),
+            rightDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
             bool leftPressedNow = leftDown && !wasLeftDown, rightPressedNow = rightDown && !wasRightDown;
             bool releasedNow = !leftDown && wasLeftDown;
             playerOneText.setPosition({910.f, 800.f});
             if (isPlayerOneTurn) {
-                player_hit_anchor_player_one:
-                if (playerOne.hitCount == 15) {
+                if (playerWins(playerOne)) {
                     currentScreen = GAME_OVER;
                     winner = PLAYER_1;
                 }
@@ -469,54 +473,7 @@ int main() {
                 playerTwo.shipShapes[i].setPosition({(600.f + playerTwo.ships[i].col * 60.f) - 400.f, 150.f + playerTwo.ships[i].row * 60.f});
                 window.draw(playerOne.shipShapes[i]);
             }
-                for (int i = 0; i<10; i++) {
-                    for (int j = 0; j<10; j++) {
-                            if (playerOne.trackingBoard[i][j].getGlobalBounds().contains(mousePosition) &&
-                                playerOne.trackingBoard[i][j].getFillColor() != sf::Color::Red &&
-                                playerOne.trackingBoard[i][j].getFillColor() != customWhite &&
-                                playerOne.trackingBoard[i][j].getFillColor() != sf::Color::Cyan) {
-                                playerOne.trackingBoard[i][j].setFillColor(sf::Color::Yellow);
-                                if(leftPressedNow) {
-                                    sf::Vector2f hitLocation(mousePosition);
-                                    int colHit = static_cast<int>((hitLocation.x - 1120.f)/60.f);
-                                    int rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
-                                    for (int k = 0; k < 5 && !playerOne.hitFlag; k++) {
-                                        for (int l = 0; l < playerTwo.ships[k].length && !playerOne.hitFlag; l++) {
-                                            if (playerTwo.shipLocations[k][l].first == rowHit &&
-                                                playerTwo.shipLocations[k][l].second == colHit) {
-                                                std::cout<<"Player 2 Ship Hit!"<<std::endl;
-                                                playerOne.trackingBoard[i][j].setFillColor(sf::Color::Red);
-                                                playerTwo.board[i][j].setFillColor(sf::Color::Red);
-                                                playerOne.hitCount++;
-                                                playerTwo.ships[k].cellsHit++;
-                                                if (playerTwo.ships[k].cellsHit == playerTwo.ships[k].length) {
-                                                    for (int m = 0; m < playerTwo.ships[k].length; m++) {
-                                                        playerOne.trackingBoard[playerTwo.shipLocations[k][m]
-                                                            .first][playerTwo.shipLocations[k][m].second]
-                                                        .setFillColor(sf::Color::Cyan);
-                                                        playerTwo.board[playerTwo.shipLocations[k][m].first][playerTwo.shipLocations[k][m].second]
-                                                        .setFillColor(sf::Color::Cyan);
-                                                    }
-                                                }
-                                                goto player_hit_anchor_player_one;
-                                            }
-                                        }
-                                    }
-                                    if (!playerOne.hitFlag) {
-                                        std::cout<<"Miss!"<<std::endl;
-                                        playerOne.trackingBoard[i][j].setFillColor(customWhite);
-                                        playerTwo.board[i][j].setFillColor(customWhite);
-                                        playerOne.hitFlag = true;
-                                    }
-                                    playerOne.hasPassed = true;
-                                }
-                            }
-                        else if (!playerOne.trackingBoard[i][j].getGlobalBounds().contains(mousePosition)
-                            && playerOne.trackingBoard[i][j].getFillColor() == sf::Color::Yellow) {
-                            playerOne.trackingBoard[i][j].setFillColor(sf::Color::Blue);
-                        }
-                    }
-                }
+                attack(playerOne, playerTwo);
                 if (playerOne.hasPassed) {
                     sf::Text player2(font);
                     player2.setString("Player 2");
@@ -530,7 +487,6 @@ int main() {
                             isPlayerOneTurn = false;
                             playerOne.hasPassed = false;
                             isPlayerTwoTurn = true;
-                            playerTwo.hitFlag = false;
                         }
                     }
                     else {
@@ -539,8 +495,7 @@ int main() {
                 }
             }
              else if (isPlayerTwoTurn) {
-                 player_hit_anchor_player_two:
-                 if (playerTwo.hitCount == 15) {
+                 if (playerWins(playerTwo)) {
                      currentScreen = GAME_OVER;
                      winner = PLAYER_2;
                  }
@@ -580,54 +535,7 @@ int main() {
                 for (int i = 0; i<5; i++) {
                     window.draw(playerTwo.shipShapes[i]);
                 }
-                for (int i = 0; i<10; i++) {
-                    for (int j = 0; j<10; j++) {
-                        if (playerTwo.trackingBoard[i][j].getGlobalBounds().contains(mousePosition) &&
-                            playerTwo.trackingBoard[i][j].getFillColor() != sf::Color::Red &&
-                            playerTwo.trackingBoard[i][j].getFillColor() != customWhite &&
-                            playerTwo.trackingBoard[i][j].getFillColor() != sf::Color::Cyan) {
-                            playerTwo.trackingBoard[i][j].setFillColor(sf::Color::Yellow);
-                            if(leftPressedNow) {
-                                sf::Vector2f hitLocation(mousePosition);
-                                int colHit = static_cast<int>((hitLocation.x - 1120.f)/60.f);
-                                int rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
-                                for (int k = 0; k < 5 && !playerTwo.hitFlag; k++) {
-                                    for (int l = 0; l < playerOne.ships[k].length && !playerTwo.hitFlag; l++) {
-                                        if (playerOne.shipLocations[k][l].first == rowHit && playerOne.shipLocations[k][l].second == colHit) {
-                                            std::cout<<"Player 1 Ship Hit!"<<std::endl;
-                                            playerTwo.trackingBoard[i][j].setFillColor(sf::Color::Red);
-                                            playerOne.board[i][j].setFillColor(sf::Color::Red);
-                                            playerTwo.hitCount++;
-                                            playerOne.ships[k].cellsHit++;
-                                            if (playerOne.ships[k].cellsHit == playerOne.ships[k].length) {
-                                                for (int m = 0; m < playerOne.ships[k].length; m++) {
-                                                    playerTwo.trackingBoard[playerOne.shipLocations[k][m].first]
-                                                    [playerOne.shipLocations[k][m].second]
-                                                    .setFillColor(sf::Color::Cyan);
-                                                    playerOne.board[playerOne.shipLocations[k][m].first]
-                                                    [playerOne.shipLocations[k][m].second].
-                                                    setFillColor(sf::Color::Cyan);
-                                                }
-                                            }
-                                            goto player_hit_anchor_player_two;
-                                        }
-                                    }
-                                }
-                                if (!playerTwo.hitFlag) {
-                                    std::cout<<"Miss!";
-                                    playerTwo.trackingBoard[i][j].setFillColor(customWhite);
-                                    playerOne.board[i][j].setFillColor(customWhite);
-                                    playerTwo.hitFlag = true;
-                                }
-                                playerTwo.hasPassed = true;
-                            }
-                        }
-                        else if (!playerTwo.trackingBoard[i][j].getGlobalBounds().contains(mousePosition) &&
-                            playerTwo.trackingBoard[i][j].getFillColor() == sf::Color::Yellow){
-                            playerTwo.trackingBoard[i][j].setFillColor(sf::Color::Blue);
-                        }
-                    }
-                }
+                attack(playerTwo, playerOne);
                  if (playerTwo.hasPassed) {
                      sf::Text player1(font);
                      player1.setString("Player 1");
@@ -641,7 +549,6 @@ int main() {
                              isPlayerTwoTurn = false;
                              playerTwo.hasPassed = false;
                              isPlayerOneTurn = true;
-                             playerOne.hitFlag = false;
                          }
                      }
                      else {
