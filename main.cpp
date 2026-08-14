@@ -1,7 +1,9 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
 #include <iostream>
 #include <vector>
-sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Default);
+#include "Network.h"
+sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Titlebar | sf::Style::Close);
 class Ship {
 public:
     int length;

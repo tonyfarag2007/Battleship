@@ -3,7 +3,10 @@ project(Battleship_GUI)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Battleship_GUI main.cpp)
+add_executable(Battleship_GUI main.cpp
+        Network.cpp
+        Network.h
+)
 
 set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_DIR C:/mingw64-sfml/SFML-3.1.0/lib/cmake/SFML)
