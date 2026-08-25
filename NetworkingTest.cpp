@@ -1,5 +1,9 @@
 #include <SFML/Network.hpp>
 #include <iostream>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/VideoMode.hpp>
+#include <SFML/Graphics.hpp>
+
 #include "Network.h"
 
 int main() {
@@ -47,6 +51,27 @@ int main() {
     else {
         std::cout << "Invalid choice" << std::endl;
     }
+    sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Battleship", sf::Style::Titlebar | sf::Style::Close);
+     sf::Font font("C:/Windows/Fonts/arial.ttf");
+     sf::Text text(font);
+    if (connectionType == 'c') {
+        text.setString("Hello Client!");
+    }
+    else if (connectionType == 's') {
+        text.setString("Hello Server!");
+    }
+
+    while (window.isOpen()) {
+        while (const std::optional event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+        }
+        window.clear();
+        window.draw(text);
+        window.display();
+    }
+
+
 
     return 0;
 }
