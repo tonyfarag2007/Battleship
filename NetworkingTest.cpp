@@ -16,7 +16,11 @@ int main() {
         sf::Socket::Status status = socket.receive(buffer, sizeof(buffer), received);
         if (status == sf::Socket::Status::Done) {
             std::cout << "Received: " << std::string(buffer, received) << std::endl;
-        } else {
+        }
+        else if (status == sf::Socket::Status::NotReady) {
+            std::cout << "No data yet!" << std::endl;
+        }
+        else {
             std::cout << "Failed to receive data" << std::endl;
         }
     }
@@ -32,7 +36,11 @@ int main() {
         sf::Socket::Status status = socket.send(msg.c_str(), msg.size());
         if (status == sf::Socket::Status::Done) {
             std::cout << "Sent: " << msg << std::endl;
-        } else {
+        }
+        else if (status == sf::Socket::Status::NotReady) {
+            std::cout << "No data yet!" << std::endl;
+        }
+        else {
             std::cout << "Failed to send data" << std::endl;
         }
     }
