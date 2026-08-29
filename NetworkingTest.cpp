@@ -26,6 +26,7 @@ public:
     std::vector<std::vector<std::pair<int, int>>> shipLocations;
     int hitCount = 0;
     bool hasPassed = false;
+    bool isReady = false;
 };
 Player playerOne, playerTwo;
 enum screen {
@@ -226,15 +227,16 @@ int main() {
     player2.setString("Player 2");
     sf::Text placeShipsText(font);
     placeShipsText.setString("Place Ships");
+    placeShipsText.setPosition({820.f, 800.f});
     sf::RectangleShape nextPlayer({180.f, 90.f});
     nextPlayer.setFillColor(sf::Color::Blue);
     nextPlayer.setPosition({1610.f, 750.f});
-    sf::Text playerTwoText(font);
-    playerTwoText.setString("Player 2");
+    sf::Text readyText(font);
+    readyText.setString("Ready!");
     sf::Text battle(font);
     battle.setString("Battle!");
     battle.setPosition({1655.f, 775.f});
-    playerTwoText.setPosition({1640.f, 775.f});
+    readyText.setPosition({1650.f, 775.f});
     sf::RectangleShape shipLoader({200.f, 560.f});
     shipLoader.setPosition({1600.f, 160.f});
     sf::RectangleShape battleButton({180.f, 90.f});
@@ -298,14 +300,7 @@ int main() {
         currentScreen = PLAYER_ONE;
         char buffer[128];
         std::size_t received;
-        sf::Socket::Status status = socket.receive(buffer, sizeof(buffer), received);
         isConnected = true;
-        if (status == sf::Socket::Status::Done) {
-            std::cout << "Received: " << std::string(buffer, received) << std::endl;
-        }
-        else {
-            std::cout << "Failed to receive data" << std::endl;
-        }
     }
     else if (connectionType == 'c') {
         currentScreen = PLAYER_TWO;
@@ -314,14 +309,6 @@ int main() {
         std::cin >> hostIp;
         socket = joinGame(hostIp);
         isConnected = true;
-        std::string msg = "hello from client";
-        sf::Socket::Status status = socket.send(msg.c_str(), msg.size());
-        if (status == sf::Socket::Status::Done) {
-            std::cout << "Sent: " << msg << std::endl;
-        }
-        else {
-            std::cout << "Failed to send data" << std::endl;
-        }
     }
     else {
         std::cout << "Invalid choice" << std::endl;
@@ -344,7 +331,6 @@ int main() {
             window.clear();
             if (currentScreen == PLAYER_ONE) {
                 playerOneText.setPosition({850.f, 30.f});
-                placeShipsText.setPosition({820.f, 800.f});
                 window.draw(playerOneText);
                 window.draw(placeShipsText);
                 window.draw(shipLoader);
@@ -369,14 +355,17 @@ int main() {
                     playerOne.shipLocations = storeShipLocations(playerOne.ships, 5);
                     if (!isOverlapping(playerOne.shipLocations, playerOne.ships, 5) && !isHanging(playerOne.shipLocations, playerOne.ships, 5)) {
                         window.draw(nextPlayer);
-                        window.draw(playerTwoText);
+                        window.draw(readyText);
                         if (nextPlayer.getGlobalBounds().contains(mousePosition)) {
                             nextPlayer.setFillColor(sf::Color::Green);
                             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                                if (!clicked) {
-                                    currentScreen = PLAYER_TWO;
+                                if (!clicked && !playerOne.isReady) {
                                     clicked = true;
                                     std::cout<<"Click!"<<std::endl;
+                                    playerOne.isReady = true;
+                                    sf::Packet ready;
+                                    ready << playerOne.isReady;
+                                    socket.send(ready);
                                 }
                             }
                             else {
@@ -385,6 +374,16 @@ int main() {
                         }
                         else {
                             nextPlayer.setFillColor(sf::Color::Blue);
+                        }
+                    }
+                }
+                if (playerOne.isReady) {
+                    sf::Packet received;
+                    if (socket.receive(received) == sf::Socket::Status::Done) {
+                        bool opponentReady = false;
+                        received >> opponentReady;
+                        if (opponentReady) {
+                            currentScreen = BATTLESHIP;
                         }
                     }
                 }
@@ -423,16 +422,20 @@ int main() {
                 }
                 if (placeShips(playerTwo, window)) {
                     playerTwo.shipLocations = storeShipLocations(playerTwo.ships, 5);
-                    if (!isOverlapping(playerTwo.shipLocations, playerTwo.ships, 5) && !isHanging(playerTwo.shipLocations, playerTwo.ships, 5)) {
+                    if (!isOverlapping(playerTwo.shipLocations, playerTwo.ships, 5)
+                        && !isHanging(playerTwo.shipLocations, playerTwo.ships, 5)) {
                         window.draw(battleButton);
-                        window.draw(battle);
+                        window.draw(readyText);
                         if (battleButton.getGlobalBounds().contains(mousePosition)) {
                             battleButton.setFillColor(sf::Color::Green);
                             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                                if (!Clicked) {
+                                if (!Clicked && !playerTwo.isReady) {
                                     Clicked = true;
                                     std::cout<<"Click!"<<std::endl;
-                                    currentScreen = BATTLESHIP;
+                                    playerTwo.isReady = true;
+                                    sf::Packet ready;
+                                    ready << playerTwo.isReady;
+                                    socket.send(ready);
                                 }
                             }
                             else {
@@ -444,10 +447,23 @@ int main() {
                         }
                     }
                 }
+                if (playerTwo.isReady) {
+                    sf::Packet received;
+                    if (socket.receive(received) == sf::Socket::Status::Done) {
+                        bool opponentReady = false;
+                        received >> opponentReady;
+                        if (opponentReady) {
+                            currentScreen = BATTLESHIP;
+                        }
+                    }
+                }
                 for (int i = 0; i < 5; i++) {
                     playerTwo.shipShapes[i].setFillColor(playerTwo.shipShapes[i].getGlobalBounds().contains(mousePosition) ?
                         sf::Color(255, 0, 0, 150) : sf::Color(0, 255, 0, 150));
                 }
+            }
+            else if (currentScreen == BATTLESHIP) {
+                window.draw(buttonText);
             }
             window.display();
         }
