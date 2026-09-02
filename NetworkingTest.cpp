@@ -463,7 +463,89 @@ int main() {
                 }
             }
             else if (currentScreen == BATTLESHIP) {
-                window.draw(buttonText);
+                if (connectionType == 's') {
+                    playerOneText.setPosition({910.f, 800.f});
+                    for (int i = 0; i < 10; i++) {
+                        for (int j = 0; j < 10; j++) {
+                            playerOne.board[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
+                            playerTwo.board[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
+                            window.draw(playerOne.board[i][j]);
+                            window.draw(playerOne.trackingBoard[i][j]);
+                        }
+                    }
+                    window.draw(battleText);
+                    window.draw(playerOneText);
+                    for (int j = 0; j <= 10; j++) {
+                        sf::RectangleShape lineOneVertical({1.f, 600.f});
+                        lineOneVertical.setFillColor(sf::Color::Black);
+                        lineOneVertical.setPosition({1120.f + j * 60.f, 150.f});
+                        window.draw(lineOneVertical);
+                    }
+                    for (int i = 0; i <= 10; i++) {
+                        sf::RectangleShape lineOneHorizontal({600.f, 1.f});
+                        lineOneHorizontal.setFillColor(sf::Color::Black);
+                        lineOneHorizontal.setPosition({1120.f, 150.f + i * 60.f});
+                        window.draw(lineOneHorizontal);
+                    }
+                    for (int j = 0; j <= 10; j++) {
+                        sf::RectangleShape lineOneTrackingVertical({1.f, 600.f});
+                        lineOneTrackingVertical.setFillColor(sf::Color::Black);
+                        lineOneTrackingVertical.setPosition({200.f + j * 60.f, 150.f});
+                        window.draw(lineOneTrackingVertical);
+                    }
+                    for (int i = 0; i <= 10; i++) {
+                        sf::RectangleShape lineOneTrackingHorizontal({600.f, 1.f});
+                        lineOneTrackingHorizontal.setFillColor(sf::Color::Black);
+                        lineOneTrackingHorizontal.setPosition({200.f, 150.f + i * 60.f});
+                        window.draw(lineOneTrackingHorizontal);
+                    }
+                    for (int i = 0; i < 5; i++) {
+                        playerOne.shipShapes[i].setPosition({(600.f + playerOne.ships[i].col * 60.f) - 400.f, 150.f + playerOne.ships[i].row * 60.f});
+                        playerTwo.shipShapes[i].setPosition({(600.f + playerTwo.ships[i].col * 60.f) - 400.f, 150.f + playerTwo.ships[i].row * 60.f});
+                        window.draw(playerOne.shipShapes[i]);
+                    }
+                }
+                else if (connectionType == 'c') {
+                    player2.setPosition({910.f, 800.f});
+                    for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 10; j++) {
+                    playerOne.board[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
+                    playerTwo.board[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
+                    window.draw(playerOne.board[i][j]);
+                    window.draw(playerOne.trackingBoard[i][j]);
+                }
+            }
+                    window.draw(battleText);
+                    window.draw(player2);
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineOneVertical({1.f, 600.f});
+                lineOneVertical.setFillColor(sf::Color::Black);
+                lineOneVertical.setPosition({1120.f + j * 60.f, 150.f});
+                window.draw(lineOneVertical);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineOneHorizontal({600.f, 1.f});
+                lineOneHorizontal.setFillColor(sf::Color::Black);
+                lineOneHorizontal.setPosition({1120.f, 150.f + i * 60.f});
+                window.draw(lineOneHorizontal);
+            }
+            for (int j = 0; j <= 10; j++) {
+                sf::RectangleShape lineOneTrackingVertical({1.f, 600.f});
+                lineOneTrackingVertical.setFillColor(sf::Color::Black);
+                lineOneTrackingVertical.setPosition({200.f + j * 60.f, 150.f});
+                window.draw(lineOneTrackingVertical);
+            }
+            for (int i = 0; i <= 10; i++) {
+                sf::RectangleShape lineOneTrackingHorizontal({600.f, 1.f});
+                lineOneTrackingHorizontal.setFillColor(sf::Color::Black);
+                lineOneTrackingHorizontal.setPosition({200.f, 150.f + i * 60.f});
+                window.draw(lineOneTrackingHorizontal);
+            }
+            for (int i = 0; i < 5; i++) {
+                playerTwo.shipShapes[i].setPosition({(600.f + playerTwo.ships[i].col * 60.f) - 400.f, 150.f + playerTwo.ships[i].row * 60.f});
+                window.draw(playerTwo.shipShapes[i]);
+            }
+                }
             }
             window.display();
         }
