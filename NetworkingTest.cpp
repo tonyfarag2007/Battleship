@@ -3,7 +3,6 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/Graphics.hpp>
-
 #include "Network.h"
 class Ship {
 public:
@@ -144,7 +143,8 @@ bool placeShips(Player& player, sf::RenderWindow& window) {
             }
     return true;
 }
-void attack(Player& player, Player& otherPlayer, sf::RenderWindow& window) {
+std::pair<int, int> attack(Player& player, sf::RenderWindow& window) {
+    int rowHit = -1, colHit = -1;
     auto mousePosition = sf::Vector2f(sf::Mouse::getPosition(window));
     static bool wasLeftDown = false;
     bool leftDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
@@ -155,48 +155,39 @@ void attack(Player& player, Player& otherPlayer, sf::RenderWindow& window) {
                             if (player.trackingBoard[i][j].getGlobalBounds().contains(mousePosition) &&
                                 player.trackingBoard[i][j].getFillColor() != sf::Color::Red &&
                                 player.trackingBoard[i][j].getFillColor() != customWhite &&
-                                player.trackingBoard[i][j].getFillColor() != sf::Color::Cyan) {
+                                player.trackingBoard[i][j].getFillColor() != sf::Color::Cyan &&
+                                player.trackingBoard[i][j].getFillColor() != sf::Color::White) {
                                 player.trackingBoard[i][j].setFillColor(sf::Color::Yellow);
                                 if(leftPressedNow) {
                                     sf::Vector2f hitLocation(mousePosition);
-                                    int colHit = static_cast<int>((hitLocation.x - 1120.f)/60.f);
-                                    int rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
-                                    for (int k = 0; k < 5; k++) {
-                                        for (int l = 0; l < otherPlayer.ships[k].length; l++) {
-                                            if (otherPlayer.shipLocations[k][l].first == rowHit &&
-                                                otherPlayer.shipLocations[k][l].second == colHit) {
-                                                player.trackingBoard[i][j].setFillColor(sf::Color::Red);
-                                                otherPlayer.board[i][j].setFillColor(sf::Color::Red);
-                                                player.hitCount++;
-                                                hit = true;
-                                                otherPlayer.ships[k].cellsHit++;
-                                                if (otherPlayer.ships[k].cellsHit == otherPlayer.ships[k].length) {
-                                                    for (int m = 0; m < otherPlayer.ships[k].length; m++) {
-                                                        player.trackingBoard[otherPlayer.shipLocations[k][m]
-                                                            .first][otherPlayer.shipLocations[k][m].second]
-                                                        .setFillColor(sf::Color::Cyan);
-                                                        otherPlayer.board[otherPlayer.shipLocations[k][m].first]
-                                                        [otherPlayer.shipLocations[k][m].second]
-                                                        .setFillColor(sf::Color::Cyan);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (!hit) {
-                                        player.trackingBoard[i][j].setFillColor(customWhite);
-                                        otherPlayer.board[i][j].setFillColor(customWhite);
-                                        player.hasPassed = true;
-                                    }
+                                    colHit = static_cast<int>((hitLocation.x - 1120.f)/60.f);
+                                    rowHit = static_cast<int>((hitLocation.y - 150.f)/60.f);
                                 }
                             }
-                        else if (!player.trackingBoard[i][j].getGlobalBounds().contains(mousePosition)
-                            && player.trackingBoard[i][j].getFillColor() == sf::Color::Yellow) {
-                            player.trackingBoard[i][j].setFillColor(sf::Color::Blue);
-                        }
+                            else if (!player.trackingBoard[i][j].getGlobalBounds().contains(mousePosition)
+                                && player.trackingBoard[i][j].getFillColor() == sf::Color::Yellow) {
+                                player.trackingBoard[i][j].setFillColor(sf::Color::Blue);
+                                }
                     }
                 }
     wasLeftDown = leftDown;
+    return {rowHit, colHit};
+}
+bool handleOpponentAttack(Player& player, sf::RenderWindow& window, int rowHit, int colHit) {
+    bool hitFound = false;
+   for (int i = 0; i < 5; i++) {
+       for (int j = 0; j<player.ships[i].length; j++) {
+           if (player.shipLocations[i][j].first == rowHit && player.shipLocations[i][j].second == colHit) {
+               player.hitCount++;
+               player.board[rowHit][colHit].setFillColor(sf::Color::Red);
+               hitFound = true;
+           }
+       }
+   }
+    if (!hitFound) {
+        player.board[rowHit][colHit].setFillColor(sf::Color::White);
+    }
+    return hitFound;
 }
 bool playerWins(Player& player) {
     return player.hitCount == 15;
@@ -504,6 +495,27 @@ int main() {
                         playerTwo.shipShapes[i].setPosition({(600.f + playerTwo.ships[i].col * 60.f) - 400.f, 150.f + playerTwo.ships[i].row * 60.f});
                         window.draw(playerOne.shipShapes[i]);
                     }
+                    std::pair<int, int> hitPair = attack(playerOne, window);
+                    if (hitPair.first != -1 && hitPair.second != -1) {
+                        sf::Packet rowAndColHit;
+                        rowAndColHit << hitPair.first << hitPair.second;
+                        socket.send(rowAndColHit);
+                    }
+                    sf::Packet hitFeedback;
+                    if (socket.receive(hitFeedback) == sf::Socket::Status::Done) {
+                        bool isHit;
+                        int rowHit, colHit;
+                        hitFeedback >> isHit >> rowHit >> colHit;
+                        if (isHit) {
+                            std::cout<<"Hit!"<<std::endl;
+                            playerOne.trackingBoard[rowHit][colHit].setFillColor(sf::Color::Red);
+                        }
+                        else if (!isHit) {
+                            std::cout<<"Miss!"<<std::endl;
+                            playerOne.trackingBoard[rowHit][colHit].setFillColor(sf::Color::White);
+                        }
+                        std::cout<<rowHit<<":"<<colHit<<std::endl;
+                    }
                 }
                 else if (connectionType == 'c') {
                     player2.setPosition({910.f, 800.f});
@@ -511,8 +523,8 @@ int main() {
                 for (int j = 0; j < 10; j++) {
                     playerOne.board[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
                     playerTwo.board[i][j].setPosition({200.f + j * 60.f, 150.f + i * 60.f });
-                    window.draw(playerOne.board[i][j]);
-                    window.draw(playerOne.trackingBoard[i][j]);
+                    window.draw(playerTwo.board[i][j]);
+                    window.draw(playerTwo.trackingBoard[i][j]);
                 }
             }
                     window.draw(battleText);
@@ -545,6 +557,14 @@ int main() {
                 playerTwo.shipShapes[i].setPosition({(600.f + playerTwo.ships[i].col * 60.f) - 400.f, 150.f + playerTwo.ships[i].row * 60.f});
                 window.draw(playerTwo.shipShapes[i]);
             }
+                    sf::Packet receivedAttack;
+                    if (socket.receive(receivedAttack) == sf::Socket::Status::Done) {
+                        int rowHit, colHit;
+                        receivedAttack >> rowHit >> colHit;
+                        sf::Packet isHit;
+                        isHit << handleOpponentAttack(playerTwo, window, rowHit, colHit) << rowHit << colHit;
+                        socket.send(isHit);
+                    }
                 }
             }
             window.display();

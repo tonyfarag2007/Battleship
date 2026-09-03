@@ -20,3 +20,7 @@ find_package(SFML COMPONENTS Window Graphics Audio Network REQUIRED)
 
 target_link_libraries(Battleship_GUI SFML::Window SFML::Graphics SFML::Audio SFML::Network)
 target_link_libraries(NetworkingTest SFML::Window SFML::Graphics SFML::Audio SFML::Network)
+
+# Statically link the MinGW runtime so the exe has no external DLL dependencies
+target_link_options(Battleship_GUI PRIVATE -static -static-libgcc -static-libstdc++)
+target_link_options(NetworkingTest PRIVATE -static -static-libgcc -static-libstdc++)
