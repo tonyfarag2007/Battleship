@@ -39,6 +39,12 @@ enum winner {
     PLAYER_1,
     PLAYER_2
 };
+enum MessageType {
+    ATTACK,
+    HIT_RESULT,
+    TURN_DONE,
+    GAME_END
+};
 sf::Color customWhite(255, 255, 255, 180);
 std::vector<std::vector<std::pair<int, int>>> storeShipLocations(Ship ships[], int size) {
     std::vector<std::vector<std::pair<int, int>>> shipLocations(size);
@@ -178,7 +184,6 @@ bool handleOpponentAttack(Player& player, sf::RenderWindow& window, int rowHit, 
    for (int i = 0; i < 5; i++) {
        for (int j = 0; j<player.ships[i].length; j++) {
            if (player.shipLocations[i][j].first == rowHit && player.shipLocations[i][j].second == colHit) {
-               player.hitCount++;
                player.board[rowHit][colHit].setFillColor(sf::Color::Red);
                hitFound = true;
            }
@@ -495,26 +500,63 @@ int main() {
                         playerTwo.shipShapes[i].setPosition({(600.f + playerTwo.ships[i].col * 60.f) - 400.f, 150.f + playerTwo.ships[i].row * 60.f});
                         window.draw(playerOne.shipShapes[i]);
                     }
-                    std::pair<int, int> hitPair = attack(playerOne, window);
-                    if (hitPair.first != -1 && hitPair.second != -1) {
-                        sf::Packet rowAndColHit;
-                        rowAndColHit << hitPair.first << hitPair.second;
-                        socket.send(rowAndColHit);
-                    }
-                    sf::Packet hitFeedback;
-                    if (socket.receive(hitFeedback) == sf::Socket::Status::Done) {
-                        bool isHit;
-                        int rowHit, colHit;
-                        hitFeedback >> isHit >> rowHit >> colHit;
-                        if (isHit) {
-                            std::cout<<"Hit!"<<std::endl;
-                            playerOne.trackingBoard[rowHit][colHit].setFillColor(sf::Color::Red);
+                        sf::Packet incoming;
+                        if (socket.receive(incoming) == sf::Socket::Status::Done) {
+                            int message;
+                            incoming >> message;
+                            if (message == TURN_DONE) {
+                                isPlayerOneTurn = true;
+                            }
+                            else if (message == ATTACK) {
+                                sf::Packet receivedAttack;
+                                int rowHit, colHit;
+                                message = HIT_RESULT;
+                                incoming >> rowHit >> colHit;
+                                sf::Packet isHit;
+                                isHit << message << handleOpponentAttack(playerOne, window, rowHit, colHit) << rowHit << colHit;
+                                socket.send(isHit);
+                            }
+                            else if (message == HIT_RESULT) {
+                                bool isHit;
+                                int rowHit, colHit;
+                                incoming >> isHit >> rowHit >> colHit;
+                                if (isHit) {
+                                    std::cout<<"Hit!"<<std::endl;
+                                    std::cout<<rowHit<<":"<<colHit<<std::endl;
+                                    playerOne.hitCount++;
+                                    playerOne.trackingBoard[rowHit][colHit].setFillColor(sf::Color::Red);
+                                    if (playerWins(playerOne)) {
+                                        currentScreen = GAME_OVER;
+                                        sf::Packet winDetected;
+                                        winDetected << GAME_END;
+                                        socket.send(winDetected);
+                                    }
+                                    else {
+                                        isPlayerOneTurn = true;
+                                    }
+                                }
+                                else if (!isHit) {
+                                    std::cout<<"Miss!"<<std::endl;
+                                    std::cout<<rowHit<<":"<<colHit<<std::endl;
+                                    playerOne.trackingBoard[rowHit][colHit].setFillColor(sf::Color::White);
+                                    message = TURN_DONE;
+                                    sf::Packet playerTurnDone;
+                                    playerTurnDone << message;
+                                    socket.send(playerTurnDone);
+                                }
+                            }
+                            if (message == GAME_END) {
+                                currentScreen = GAME_OVER;
+                            }
                         }
-                        else if (!isHit) {
-                            std::cout<<"Miss!"<<std::endl;
-                            playerOne.trackingBoard[rowHit][colHit].setFillColor(sf::Color::White);
+                    if (isPlayerOneTurn) {
+                        std::pair<int, int> hitPair = attack(playerOne, window);
+                        if (hitPair.first != -1 && hitPair.second != -1) {
+                            sf::Packet rowAndColHit;
+                            rowAndColHit << ATTACK << hitPair.first << hitPair.second;
+                            socket.send(rowAndColHit);
+                            isPlayerOneTurn = false;
                         }
-                        std::cout<<rowHit<<":"<<colHit<<std::endl;
                     }
                 }
                 else if (connectionType == 'c') {
@@ -559,18 +601,69 @@ int main() {
             }
                     sf::Packet receivedAttack;
                     if (socket.receive(receivedAttack) == sf::Socket::Status::Done) {
-                        int rowHit, colHit;
-                        receivedAttack >> rowHit >> colHit;
-                        sf::Packet isHit;
-                        isHit << handleOpponentAttack(playerTwo, window, rowHit, colHit) << rowHit << colHit;
-                        socket.send(isHit);
+                        int message;
+                        receivedAttack >> message;
+                        if (message == TURN_DONE) {
+                            isPlayerTwoTurn = true;
+                        }
+                        else if (message == ATTACK) {
+                            int rowHit, colHit;
+                            receivedAttack >> rowHit >> colHit;
+                            sf::Packet isHit;
+                            message = HIT_RESULT;
+                            isHit << message << handleOpponentAttack(playerTwo, window, rowHit, colHit) << rowHit << colHit;
+                            socket.send(isHit);
+                        }
+                        else if (message == HIT_RESULT) {
+                            bool isHit;
+                            int rowHit, colHit;
+                            receivedAttack >> isHit >> rowHit >> colHit;
+                            if (isHit) {
+                                std::cout<<"Hit!"<<std::endl;
+                                std::cout<<rowHit<<":"<<colHit<<std::endl;
+                                playerTwo.hitCount++;
+                                playerTwo.trackingBoard[rowHit][colHit].setFillColor(sf::Color::Red);
+                                if (playerWins(playerTwo)) {
+                                    currentScreen = GAME_OVER;
+                                    sf::Packet winDetected;
+                                    winDetected << GAME_END;
+                                    socket.send(winDetected);
+                                }
+                                else {
+                                    isPlayerTwoTurn = true;
+                                }
+                            }
+                            else if (!isHit) {
+                                std::cout<<"Miss!"<<std::endl;
+                                std::cout<<rowHit<<":"<<colHit<<std::endl;
+                                playerTwo.trackingBoard[rowHit][colHit].setFillColor(sf::Color::White);
+                                message = TURN_DONE;
+                                sf::Packet playerTurnDone;
+                                playerTurnDone << message;
+                                socket.send(playerTurnDone);
+                            }
+                        }
+                        else if (message == GAME_END) {
+                            currentScreen = GAME_OVER;
+                        }
+                    }
+                    if (isPlayerTwoTurn) {
+                        std::pair <int, int> hitPair = attack(playerTwo, window);
+                        if (hitPair.first != -1 && hitPair.second != -1) {
+                            sf::Packet rowAndHitCol;
+                            rowAndHitCol << ATTACK << hitPair.first << hitPair.second;
+                            socket.send(rowAndHitCol);
+                            isPlayerTwoTurn = false;
+                        }
                     }
                 }
+            }
+            else if (currentScreen == GAME_OVER) {
+                gameOver.setString("Game Over!");
+                window.draw(gameOver);
             }
             window.display();
         }
     }
-
-
     return 0;
 }
