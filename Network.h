@@ -1,12 +1,12 @@
-//
-// Created by tonyw on 2026-08-06.
-//
 #include <SFML/Network.hpp>
 
 #ifndef BATTLESHIP_GUI_NETWORK_H
 #define BATTLESHIP_GUI_NETWORK_H
 
-sf::TcpSocket hostGame();
-sf::TcpSocket joinGame(const std::string&);
+void startHosting(sf::TcpListener& listener);
+sf::Socket::Status tryAccept(sf::TcpListener& listener, sf::TcpSocket& socket);
+
+void startJoining(sf::TcpSocket& socket, const std::string& hostIp);
+sf::Socket::Status tryConnect(sf::TcpSocket& socket);
 
 #endif //BATTLESHIP_GUI_NETWORK_H

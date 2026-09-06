@@ -1,42 +1,36 @@
 #include <SFML/Network.hpp>
 #include <iostream>
 
-sf::TcpSocket hostGame() {
-    sf::TcpListener listener;
+void startHosting(sf::TcpListener& listener) {
     listener.listen(53000);
+    listener.setBlocking(false); // the actual fix — listener itself must be non-blocking
 
     std::optional<sf::IpAddress> myIp = sf::IpAddress::getLocalAddress();
     if (myIp.has_value()) {
         std::cout << "Hosting on: " << myIp->toString() << std::endl;
     }
-
-    sf::TcpSocket socket;
-    sf::Socket::Status status = listener.accept(socket);
-    socket.setBlocking(false);
-    if (status != sf::Socket::Status::Done) {
-        std::cout << "Failed to accept connection" << std::endl;
-    } else {
-        std::cout << "Client connected!" << std::endl;
-    }
-
-    return socket;
 }
 
-sf::TcpSocket joinGame(const std::string& hostIp) {
-    sf::TcpSocket socket;
+sf::Socket::Status tryAccept(sf::TcpListener& listener, sf::TcpSocket& socket) {
+    sf::Socket::Status status = listener.accept(socket); // returns immediately now
+    if (status == sf::Socket::Status::Done) {
+        socket.setBlocking(false); // switch the game socket to non-blocking once connected
+        std::cout << "Client connected!" << std::endl;
+    }
+    return status; // Done, NotReady, or Error — caller decides what to do
+}
+
+void startJoining(sf::TcpSocket& socket, const std::string& hostIp) {
     std::optional<sf::IpAddress> ip = sf::IpAddress::resolve(hostIp);
     if (!ip.has_value()) {
         std::cout << "Invalid IP" << std::endl;
-        return socket;
+        return;
     }
+    socket.setBlocking(false); // non-blocking BEFORE connect, not after
+    socket.connect(ip.value(), 53000); // returns immediately, connection proceeds in background
+}
 
-    sf::Socket::Status status = socket.connect(ip.value(), 53000);
-    socket.setBlocking(false);
-    if (status != sf::Socket::Status::Done) {
-        std::cout << "Failed to connect" << std::endl;
-    } else {
-        std::cout << "Connected to host!" << std::endl;
-    }
-
-    return socket;
+sf::Socket::Status tryConnect(sf::TcpSocket& socket) {
+    // Calling connect() again on an in-progress non-blocking socket checks its status
+    return socket.getRemoteAddress().has_value() ? sf::Socket::Status::Done : sf::Socket::Status::NotReady;
 }
