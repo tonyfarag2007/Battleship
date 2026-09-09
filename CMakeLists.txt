@@ -17,6 +17,11 @@ add_executable(NetworkingTest
 set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_DIR C:/mingw64-sfml/SFML-3.1.0/lib/cmake/SFML)
 find_package(SFML COMPONENTS Window Graphics Audio Network REQUIRED)
+configure_file(
+        ${CMAKE_SOURCE_DIR}/AsapSharp.ttf
+        ${CMAKE_BINARY_DIR}/AsapSharp.ttf
+        COPYONLY
+)
 
 target_link_libraries(Battleship_GUI SFML::Window SFML::Graphics SFML::Audio SFML::Network)
 target_link_libraries(NetworkingTest SFML::Window SFML::Graphics SFML::Audio SFML::Network)

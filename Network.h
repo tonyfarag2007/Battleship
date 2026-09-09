@@ -6,7 +6,7 @@
 void startHosting(sf::TcpListener& listener);
 sf::Socket::Status tryAccept(sf::TcpListener& listener, sf::TcpSocket& socket);
 
-void startJoining(sf::TcpSocket& socket, const std::string& hostIp);
+bool startJoining(sf::TcpSocket& socket, const std::string& hostIp);
 sf::Socket::Status tryConnect(sf::TcpSocket& socket);
 
 #endif //BATTLESHIP_GUI_NETWORK_H

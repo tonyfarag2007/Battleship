@@ -20,14 +20,15 @@ sf::Socket::Status tryAccept(sf::TcpListener& listener, sf::TcpSocket& socket) {
     return status; // Done, NotReady, or Error — caller decides what to do
 }
 
-void startJoining(sf::TcpSocket& socket, const std::string& hostIp) {
+bool startJoining(sf::TcpSocket& socket, const std::string& hostIp) {
     std::optional<sf::IpAddress> ip = sf::IpAddress::resolve(hostIp);
     if (!ip.has_value()) {
         std::cout << "Invalid IP" << std::endl;
-        return;
+        return false;
     }
     socket.setBlocking(false); // non-blocking BEFORE connect, not after
     socket.connect(ip.value(), 53000); // returns immediately, connection proceeds in background
+    return true;
 }
 
 sf::Socket::Status tryConnect(sf::TcpSocket& socket) {
