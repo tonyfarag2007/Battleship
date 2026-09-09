@@ -50,6 +50,8 @@ cmake --build build
 
 This produces two executables: `Battleship_GUI` (local prototype) and `NetworkingTest` (the networked game). Both link SFML statically along with the MinGW runtime, so the resulting `.exe` has no external DLL dependencies.
 
+Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), not an absolute one. CMake copies AsapSharp.ttf into the build output directory automatically via configure_file(), so it will work right after building — but if you move or share the .exe on its own, you must copy AsapSharp.ttf into the same folder as the executable, or font loading will fail and the app will crash on startup.
+
 ## Running (LAN multiplayer)
 
 1. One player launches `NetworkingTest` and chooses **Server** — the app displays its local IP ("Hosting on: `<ip>`")
