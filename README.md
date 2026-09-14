@@ -30,7 +30,7 @@ The game is driven by a single `screen` enum state machine (`CONNECTING → WAIT
 
 | File | Purpose |
 |---|---|
-| `NetworkingTest.cpp` | **The actual game.** Full networked implementation — connection setup, gameplay, win/disconnect handling. Build and run this target to play. |
+| `NetworkingTest.cpp` | **The actual game.** Full networked implementation - connection setup, gameplay, win/disconnect handling. Build and run this target to play. |
 | `main.cpp` | Earlier local-only (hot-seat) prototype, kept for reference. Not networked. |
 | `Network.cpp` / `Network.h` | TCP hosting/joining helpers (`startHosting`, `tryAccept`, `startJoining`, `tryConnect`) |
 | `CMakeLists.txt` | Build configuration for both targets |
