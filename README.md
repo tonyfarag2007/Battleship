@@ -17,8 +17,8 @@ A 2D Battleship game built in C++ with SFML, supporting both local two-player (h
 The game is driven by a single `screen` enum state machine (`CONNECTING → WAITING_FOR_CLIENT/CONNECTING_TO_HOST → PLAYER_ONE/PLAYER_TWO → BATTLESHIP → GAME_OVER/DISCONNECTED`), with per-frame logic branching on the current screen inside the main render loop.
 
 **Core types:**
-- `Ship` — length, board position, orientation, and per-ship hit count
-- `Player` — five ships, a 10×10 board, a 10×10 tracking board (what you know about the opponent), and ship location lookup for hit resolution
+- `Ship` - length, board position, orientation, and per-ship hit count
+- `Player` - five ships, a 10×10 board, a 10×10 tracking board (what you know about the opponent), and ship location lookup for hit resolution
 
 **Networking model:**
 - The host is always Player 1, the client is always Player 2
