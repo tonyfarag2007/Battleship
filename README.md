@@ -50,7 +50,7 @@ cmake --build build
 
 This produces two executables: `Battleship_GUI` (local prototype) and `NetworkingTest` (the networked game). Both link SFML statically along with the MinGW runtime, so the resulting `.exe` has no external DLL dependencies.
 
-Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), not an absolute one. CMake copies AsapSharp.ttf into the build output directory automatically via configure_file(), so it will work right after building — but if you move or share the .exe on its own, you must copy AsapSharp.ttf into the same folder as the executable, or font loading will fail and the app will crash on startup.
+Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), not an absolute one. CMake copies AsapSharp.ttf into the build output directory automatically via configure_file(), so it will work right after building - but if you move or share the .exe on its own, you must copy AsapSharp.ttf into the same folder as the executable, or font loading will fail and the app will crash on startup.
 
 ## Running (LAN multiplayer)
 
@@ -60,12 +60,12 @@ Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), n
 4. Players alternate turns clicking cells on the tracking board; hits, misses, and sunk ships update live for both sides
 5. On game over, either player can choose "Play Again" to reset both boards and start a new round on the same connection
 
-**Note:** LAN-only — this doesn't do NAT traversal, so both machines need to be on the same local network. Port 53000 needs to be allowed through any local firewall.
+**Note:** LAN-only - this doesn't do NAT traversal, so both machines need to be on the same local network. Port 53000 needs to be allowed through any local firewall.
 
 ## Known Limitations
 
 - LAN only, no internet play (no NAT traversal/relay server)
-- No reconnection after a disconnect — the match ends
+- No reconnection after a disconnect - the match ends
 - `main.cpp`'s local mode currently loads a hardcoded Windows font path (`C:/Windows/Fonts/arial.ttf`); the networked build (`NetworkingTest.cpp`) instead bundles its own font file, which is the more portable approach
 
 ## Possible Future Work
