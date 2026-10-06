@@ -3,7 +3,7 @@
 
 void startHosting(sf::TcpListener& listener) {
     listener.listen(53000);
-    listener.setBlocking(false); // the actual fix — listener itself must be non-blocking
+    listener.setBlocking(false);
 
     std::optional<sf::IpAddress> myIp = sf::IpAddress::getLocalAddress();
     if (myIp.has_value()) {
@@ -29,6 +29,14 @@ bool startJoining(sf::TcpSocket& socket, const std::string& hostIp) {
     socket.setBlocking(false); // non-blocking BEFORE connect, not after
     socket.connect(ip.value(), 53000); // returns immediately, connection proceeds in background
     return true;
+}
+sf::Socket::Status connectToHost(sf::TcpSocket& socket, const sf::IpAddress& ip) {
+    socket.setBlocking(true);
+    sf::Socket::Status s = socket.connect(ip, 53000, sf::seconds(5));
+    std::cout << "connect() returned " << static_cast<int>(s) << std::endl;
+    if (s == sf::Socket::Status::Done) socket.setBlocking(false);
+    else socket.disconnect();
+    return s;
 }
 
 sf::Socket::Status tryConnect(sf::TcpSocket& socket) {
