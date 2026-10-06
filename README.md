@@ -60,7 +60,7 @@ Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), n
 4. Players alternate turns clicking cells on the tracking board; hits, misses, and sunk ships update live for both sides
 5. On game over, either player can choose "Play Again" to reset both boards and start a new round on the same connection
 
-**Note:** LAN-only - this doesn't do NAT traversal, so both machines need to be on the same local network. Port 53000 needs to be allowed through any local firewall.
+**Note:** LAN-only, this doesn't do NAT traversal, so both machines need to be on the same local network. Port 53000 needs to be allowed through any local firewall.
 
 ## Known Limitations
 
