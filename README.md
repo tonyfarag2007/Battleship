@@ -54,7 +54,7 @@ Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), n
 
 ## Running (LAN multiplayer)
 
-1. One player launches `NetworkingTest` and chooses **Server** — the app displays its local IP ("Hosting on: `<ip>`")
+1. One player launches `NetworkingTest` and chooses **Server**, the app displays its local IP ("Hosting on: `<ip>`")
 2. The other player launches `NetworkingTest`, chooses **Client**, and enters the host's IP address
 3. Once connected, both players place their five ships (drag to move, right-click to rotate) and battle begins
 4. Players alternate turns clicking cells on the tracking board; hits, misses, and sunk ships update live for both sides
@@ -65,8 +65,8 @@ Important: NetworkingTest loads its font from a relative path (AsapSharp.ttf), n
 ## Known Limitations
 
 - LAN only, no internet play (no NAT traversal/relay server)
-- No reconnection after a disconnect - the match ends
-- `main.cpp`'s local mode currently loads a hardcoded Windows font path (`C:/Windows/Fonts/arial.ttf`); the networked build (`NetworkingTest.cpp`) instead bundles its own font file, which is the more portable approach
+- No reconnection after a disconnect, the match ends
+- `main.cpp`'s local mode currently loads a hardcoded Windows font path (`C:/Windows/Fonts/arial.ttf`). The networked build (`NetworkingTest.cpp`) instead bundles its own font file, which is the more portable approach
 
 ## Possible Future Work
 
